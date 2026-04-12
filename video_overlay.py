@@ -50,8 +50,8 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float):
 
         # Timer en haut a droite - fond noir
         "drawbox=x=iw-200:y=25:w=180:h=50:color=black@0.6:t=fill",
-        # Timer texte
-        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\:%S}}':x=w-185:y=33:fontsize=32:fontcolor=white",
+        # Timer texte (minutes:secondes)
+        "drawtext=text='%{eif\\:trunc(t/60)\\:d\\:2}\\:%{eif\\:mod(trunc(t),60)\\:d\\:2}':x=w-170:y=33:fontsize=32:fontcolor=white",
 
         # === COINS DE CADRAGE ===
         "drawbox=x=40:y=140:w=80:h=6:color=white@0.7:t=fill",
