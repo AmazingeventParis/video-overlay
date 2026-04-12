@@ -37,20 +37,17 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float):
         # REC dot (rouge, clignotant)
         "drawbox=x=20:y=20:w=12:h=12:color=red:t=fill:enable='lt(mod(t,1),0.5)'",
         # REC text (blanc, clignotant)
-        "drawtext=text='REC':x=40:y=17:fontsize=14:fontcolor=white:enable='lt(mod(t,1),0.5)'",
+        "drawtext=text=REC:x=40:y=17:fontsize=14:fontcolor=white:enable='lt(mod(t,1),0.5)'",
         # Timer top right
-        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\\\\\:%S}':x=w-110:y=17:fontsize=22:fontcolor=white",
+        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\:%S}':x=w-110:y=17:fontsize=22:fontcolor=white",
 
-        # Corner brackets - top left
+        # Corner brackets
         "drawbox=x=40:y=60:w=30:h=2:color=white@0.5:t=fill",
         "drawbox=x=40:y=60:w=2:h=30:color=white@0.5:t=fill",
-        # Corner brackets - top right
         "drawbox=x=w-70:y=60:w=30:h=2:color=white@0.5:t=fill",
         "drawbox=x=w-42:y=60:w=2:h=30:color=white@0.5:t=fill",
-        # Corner brackets - bottom left
         "drawbox=x=40:y=h-150:w=30:h=2:color=white@0.5:t=fill",
         "drawbox=x=40:y=h-180:w=2:h=30:color=white@0.5:t=fill",
-        # Corner brackets - bottom right
         "drawbox=x=w-70:y=h-150:w=30:h=2:color=white@0.5:t=fill",
         "drawbox=x=w-42:y=h-180:w=2:h=30:color=white@0.5:t=fill",
 
@@ -58,9 +55,7 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float):
         "drawbox=x=20:y=h-110:w=w-40:h=3:color=white@0.15:t=fill",
 
         # SHOOTNBOX label
-        "drawtext=text='SHOOTNBOX':x=20:y=h-95:fontsize=11:fontcolor=white@0.5",
-        # Duration label
-        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\\\\\:%S} / 00\\:30':x=w-150:y=h-95:fontsize=11:fontcolor=white@0.5",
+        "drawtext=text=SHOOTNBOX:x=20:y=h-95:fontsize=11:fontcolor=white@0.5",
 
         # Event name (rose)
         f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-70:fontsize=14:fontcolor=pink",
@@ -125,7 +120,7 @@ def process_video():
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
 
             if result.returncode != 0:
-                return jsonify({"error": "ffmpeg failed", "stderr": result.stderr[-500:]}), 500
+                return jsonify({"error": "ffmpeg failed", "stderr": result.stderr[-1500:], "cmd": " ".join(cmd)}), 500
 
             # Re-upload vers Supabase Storage (remplace l'original)
             with open(output_path, "rb") as f:
