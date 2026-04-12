@@ -12,7 +12,7 @@ from supabase import create_client
 app = Flask(__name__)
 
 SUPABASE_URL = "https://supabase-api.swipego.app"
-SUPABASE_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3MDkyNDEyMCwiZXhwIjo0OTI2NTk3NzIwLCJyb2xlIjoic2VydmljZV9yb2xlIn0.Oq-8cU8onT3ElqgqeDOyaUVYpUX1WhqsgScm_VsJDjA"
+SUPABASE_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3MTI3NDIyMCwiZXhwIjo0OTI2OTQ3ODIwLCJyb2xlIjoic2VydmljZV9yb2xlIn0.iqPsHjDWX9X2942nD1lsSin0yNvob06s0qP_FDTShns"
 BUCKET = "appshoot-photos"
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
