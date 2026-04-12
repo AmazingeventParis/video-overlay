@@ -38,39 +38,41 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float):
     full_event = full_event.replace("'", "\\'").replace(":", "\\:")
 
     filters = [
-        # Fond noir semi-transparent derriere REC + timer en haut
-        "drawbox=x=0:y=0:w=iw:h=90:color=black@0.4:t=fill",
+        # === HAUT : bandeau noir ===
+        "drawbox=x=0:y=0:w=iw:h=100:color=black@0.5:t=fill",
 
-        # REC dot (rouge, clignotant)
-        "drawbox=x=30:y=30:w=28:h=28:color=red:t=fill:enable='lt(mod(t,1),0.5)'",
-        # REC text
-        "drawtext=text=REC:x=70:y=28:fontsize=34:fontcolor=white:enable='lt(mod(t,1),0.5)'",
-        # Timer top right
-        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\:%S}':x=w-170:y=28:fontsize=38:fontcolor=white",
+        # Badge REC rouge (rectangle)
+        "drawbox=x=20:y=25:w=140:h=50:color=0x990000@0.95:t=fill:enable='lt(mod(t,1),0.5)'",
+        # Cercle blanc dans le badge (simule avec un petit carre)
+        "drawbox=x=35:y=40:w=20:h=20:color=white:t=fill:enable='lt(mod(t,1),0.5)'",
+        # Texte REC
+        "drawtext=text=REC:x=65:y=33:fontsize=32:fontcolor=white:enable='lt(mod(t,1),0.5)'",
 
-        # Corner brackets - gros et epais
-        "drawbox=x=40:y=130:w=80:h=6:color=white@0.7:t=fill",
-        "drawbox=x=40:y=130:w=6:h=80:color=white@0.7:t=fill",
-        "drawbox=x=iw-120:y=130:w=80:h=6:color=white@0.7:t=fill",
-        "drawbox=x=iw-46:y=130:w=6:h=80:color=white@0.7:t=fill",
-        "drawbox=x=40:y=ih-260:w=80:h=6:color=white@0.7:t=fill",
-        "drawbox=x=40:y=ih-340:w=6:h=80:color=white@0.7:t=fill",
-        "drawbox=x=iw-120:y=ih-260:w=80:h=6:color=white@0.7:t=fill",
-        "drawbox=x=iw-46:y=ih-340:w=6:h=80:color=white@0.7:t=fill",
+        # Timer en haut a droite - fond noir
+        "drawbox=x=iw-200:y=25:w=180:h=50:color=black@0.6:t=fill",
+        # Timer texte
+        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\:%S}}':x=w-185:y=33:fontsize=32:fontcolor=white",
 
-        # Fond noir semi-transparent en bas
-        "drawbox=x=0:y=ih-160:w=iw:h=160:color=black@0.5:t=fill",
+        # === COINS DE CADRAGE ===
+        "drawbox=x=40:y=140:w=80:h=6:color=white@0.7:t=fill",
+        "drawbox=x=40:y=140:w=6:h=80:color=white@0.7:t=fill",
+        "drawbox=x=iw-120:y=140:w=80:h=6:color=white@0.7:t=fill",
+        "drawbox=x=iw-46:y=140:w=6:h=80:color=white@0.7:t=fill",
+        "drawbox=x=40:y=ih-280:w=80:h=6:color=white@0.7:t=fill",
+        "drawbox=x=40:y=ih-360:w=6:h=80:color=white@0.7:t=fill",
+        "drawbox=x=iw-120:y=ih-280:w=80:h=6:color=white@0.7:t=fill",
+        "drawbox=x=iw-46:y=ih-360:w=6:h=80:color=white@0.7:t=fill",
 
-        # SHOOTNBOX label
-        "drawtext=text=SHOOTNBOX:x=30:y=h-145:fontsize=20:fontcolor=white@0.7",
+        # === BAS : bandeau noir ===
+        "drawbox=x=0:y=ih-130:w=iw:h=130:color=black@0.6:t=fill",
 
-        # Timer en bas a droite
-        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\:%S} / 00\\:30':x=w-260:y=h-145:fontsize=20:fontcolor=white@0.7",
+        # SHOOTNBOX petit en haut du bandeau
+        "drawtext=text=SHOOTNBOX:x=(w-text_w)/2:y=h-125:fontsize=16:fontcolor=white@0.5",
 
-        # Carte fuchsia pour le nom de l evenement
-        "drawbox=x=(iw-400)/2:y=ih-110:w=400:h=50:color=0xFF1493@0.9:t=fill",
-        # Texte blanc sur la carte
-        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-100:fontsize=26:fontcolor=white",
+        # Carte fuchsia centree - large
+        "drawbox=x=20:y=ih-95:w=iw-40:h=55:color=0xFF1493@0.95:t=fill",
+        # Texte blanc sur la carte fuchsia
+        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-84:fontsize=28:fontcolor=white",
     ]
 
     return ",".join(filters)
