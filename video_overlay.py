@@ -28,40 +28,49 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float):
         'soiree': 'Soiree de',
     }
     prefix = prefix_map.get(event_type, 'Evenement')
-    full_event = f"{prefix} {event_name}"
+    # Eviter la redondance "Anniversaire de Les 30 ans de..."
+    if event_name.lower().startswith(('les ', 'le ', 'la ', 'l\'')):
+        full_event = f"{prefix} {event_name}"
+    else:
+        full_event = f"{prefix} {event_name}"
 
     # Echapper les caractères spéciaux pour ffmpeg drawtext
     full_event = full_event.replace("'", "\\'").replace(":", "\\:")
 
     filters = [
-        # REC dot (rouge, clignotant) - gros
-        "drawbox=x=30:y=40:w=24:h=24:color=red:t=fill:enable='lt(mod(t,1),0.5)'",
-        # REC text (blanc, clignotant) - gros
-        "drawtext=text=REC:x=65:y=38:fontsize=30:fontcolor=white:enable='lt(mod(t,1),0.5)'",
-        # Timer top right - gros
-        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\:%S}':x=w-160:y=38:fontsize=36:fontcolor=white",
+        # Fond noir semi-transparent derriere REC + timer en haut
+        "drawbox=x=0:y=0:w=iw:h=90:color=black@0.4:t=fill",
 
-        # Corner brackets - epais
-        "drawbox=x=50:y=120:w=60:h=4:color=white@0.6:t=fill",
-        "drawbox=x=50:y=120:w=4:h=60:color=white@0.6:t=fill",
-        "drawbox=x=iw-110:y=120:w=60:h=4:color=white@0.6:t=fill",
-        "drawbox=x=iw-54:y=120:w=4:h=60:color=white@0.6:t=fill",
-        "drawbox=x=50:y=ih-240:w=60:h=4:color=white@0.6:t=fill",
-        "drawbox=x=50:y=ih-300:w=4:h=60:color=white@0.6:t=fill",
-        "drawbox=x=iw-110:y=ih-240:w=60:h=4:color=white@0.6:t=fill",
-        "drawbox=x=iw-54:y=ih-300:w=4:h=60:color=white@0.6:t=fill",
+        # REC dot (rouge, clignotant)
+        "drawbox=x=30:y=30:w=28:h=28:color=red:t=fill:enable='lt(mod(t,1),0.5)'",
+        # REC text
+        "drawtext=text=REC:x=70:y=28:fontsize=34:fontcolor=white:enable='lt(mod(t,1),0.5)'",
+        # Timer top right
+        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\:%S}':x=w-170:y=28:fontsize=38:fontcolor=white",
 
-        # Progress bar background - epais
-        "drawbox=x=30:y=ih-180:w=iw-60:h=6:color=white@0.2:t=fill",
+        # Corner brackets - gros et epais
+        "drawbox=x=40:y=130:w=80:h=6:color=white@0.7:t=fill",
+        "drawbox=x=40:y=130:w=6:h=80:color=white@0.7:t=fill",
+        "drawbox=x=iw-120:y=130:w=80:h=6:color=white@0.7:t=fill",
+        "drawbox=x=iw-46:y=130:w=6:h=80:color=white@0.7:t=fill",
+        "drawbox=x=40:y=ih-260:w=80:h=6:color=white@0.7:t=fill",
+        "drawbox=x=40:y=ih-340:w=6:h=80:color=white@0.7:t=fill",
+        "drawbox=x=iw-120:y=ih-260:w=80:h=6:color=white@0.7:t=fill",
+        "drawbox=x=iw-46:y=ih-340:w=6:h=80:color=white@0.7:t=fill",
 
-        # SHOOTNBOX label - gros
-        "drawtext=text=SHOOTNBOX:x=30:y=h-155:fontsize=22:fontcolor=white@0.6",
+        # Fond noir semi-transparent en bas
+        "drawbox=x=0:y=ih-160:w=iw:h=160:color=black@0.5:t=fill",
 
-        # Timer label en bas a droite
-        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\:%S} / 00\\:30':x=w-250:y=h-155:fontsize=22:fontcolor=white@0.6",
+        # SHOOTNBOX label
+        "drawtext=text=SHOOTNBOX:x=30:y=h-145:fontsize=20:fontcolor=white@0.7",
 
-        # Event name (rose) - gros
-        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-120:fontsize=28:fontcolor=pink",
+        # Timer en bas a droite
+        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\:%S} / 00\\:30':x=w-260:y=h-145:fontsize=20:fontcolor=white@0.7",
+
+        # Carte fuchsia pour le nom de l evenement
+        "drawbox=x=(iw-400)/2:y=ih-110:w=400:h=50:color=0xFF1493@0.9:t=fill",
+        # Texte blanc sur la carte
+        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-100:fontsize=26:fontcolor=white",
     ]
 
     return ",".join(filters)
