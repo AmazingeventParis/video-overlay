@@ -122,13 +122,16 @@ def process_video():
             # Construire le filtre
             vf = build_ffmpeg_filter(event_name, event_type, duration)
 
-            # Appliquer ffmpeg
+            # Appliquer ffmpeg (autorotate preserve metadata)
             cmd = [
-                "ffmpeg", "-y", "-i", input_path,
+                "ffmpeg", "-y",
+                "-i", input_path,
                 "-vf", vf,
                 "-c:a", "copy",
                 "-preset", "fast",
                 "-crf", "23",
+                "-map_metadata", "0",
+                "-movflags", "+faststart",
                 output_path
             ]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
