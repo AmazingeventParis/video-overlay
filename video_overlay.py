@@ -43,8 +43,8 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float):
 
         # Badge REC rouge (rectangle)
         "drawbox=x=20:y=25:w=140:h=50:color=0x990000@0.95:t=fill:enable='lt(mod(t,1),0.5)'",
-        # Cercle blanc dans le badge (simule avec un petit carre)
-        "drawbox=x=35:y=40:w=20:h=20:color=white:t=fill:enable='lt(mod(t,1),0.5)'",
+        # Cercle blanc dans le badge
+        "drawtext=text='\u25CF':x=35:y=33:fontsize=32:fontcolor=white:enable='lt(mod(t,1),0.5)'",
         # Texte REC
         "drawtext=text=REC:x=65:y=33:fontsize=32:fontcolor=white:enable='lt(mod(t,1),0.5)'",
 
