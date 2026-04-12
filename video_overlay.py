@@ -34,31 +34,34 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float):
     full_event = full_event.replace("'", "\\'").replace(":", "\\:")
 
     filters = [
-        # REC dot (rouge, clignotant)
-        "drawbox=x=20:y=20:w=12:h=12:color=red:t=fill:enable='lt(mod(t,1),0.5)'",
-        # REC text (blanc, clignotant)
-        "drawtext=text=REC:x=40:y=17:fontsize=14:fontcolor=white:enable='lt(mod(t,1),0.5)'",
-        # Timer top right
-        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\:%S}':x=w-110:y=17:fontsize=22:fontcolor=white",
+        # REC dot (rouge, clignotant) - gros
+        "drawbox=x=30:y=40:w=24:h=24:color=red:t=fill:enable='lt(mod(t,1),0.5)'",
+        # REC text (blanc, clignotant) - gros
+        "drawtext=text=REC:x=65:y=38:fontsize=30:fontcolor=white:enable='lt(mod(t,1),0.5)'",
+        # Timer top right - gros
+        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\:%S}':x=w-160:y=38:fontsize=36:fontcolor=white",
 
-        # Corner brackets
-        "drawbox=x=40:y=60:w=30:h=2:color=white@0.5:t=fill",
-        "drawbox=x=40:y=60:w=2:h=30:color=white@0.5:t=fill",
-        "drawbox=x=iw-70:y=60:w=30:h=2:color=white@0.5:t=fill",
-        "drawbox=x=iw-42:y=60:w=2:h=30:color=white@0.5:t=fill",
-        "drawbox=x=40:y=ih-150:w=30:h=2:color=white@0.5:t=fill",
-        "drawbox=x=40:y=ih-180:w=2:h=30:color=white@0.5:t=fill",
-        "drawbox=x=iw-70:y=ih-150:w=30:h=2:color=white@0.5:t=fill",
-        "drawbox=x=iw-42:y=ih-180:w=2:h=30:color=white@0.5:t=fill",
+        # Corner brackets - epais
+        "drawbox=x=50:y=120:w=60:h=4:color=white@0.6:t=fill",
+        "drawbox=x=50:y=120:w=4:h=60:color=white@0.6:t=fill",
+        "drawbox=x=iw-110:y=120:w=60:h=4:color=white@0.6:t=fill",
+        "drawbox=x=iw-54:y=120:w=4:h=60:color=white@0.6:t=fill",
+        "drawbox=x=50:y=ih-240:w=60:h=4:color=white@0.6:t=fill",
+        "drawbox=x=50:y=ih-300:w=4:h=60:color=white@0.6:t=fill",
+        "drawbox=x=iw-110:y=ih-240:w=60:h=4:color=white@0.6:t=fill",
+        "drawbox=x=iw-54:y=ih-300:w=4:h=60:color=white@0.6:t=fill",
 
-        # Progress bar background
-        "drawbox=x=20:y=ih-110:w=iw-40:h=3:color=white@0.15:t=fill",
+        # Progress bar background - epais
+        "drawbox=x=30:y=ih-180:w=iw-60:h=6:color=white@0.2:t=fill",
 
-        # SHOOTNBOX label
-        "drawtext=text=SHOOTNBOX:x=20:y=h-95:fontsize=11:fontcolor=white@0.5",
+        # SHOOTNBOX label - gros
+        "drawtext=text=SHOOTNBOX:x=30:y=ih-155:fontsize=22:fontcolor=white@0.6",
 
-        # Event name (rose)
-        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-70:fontsize=14:fontcolor=pink",
+        # Timer label en bas a droite
+        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\:%S} / 00\\:30':x=w-250:y=ih-155:fontsize=22:fontcolor=white@0.6",
+
+        # Event name (rose) - gros
+        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=ih-120:fontsize=28:fontcolor=pink",
     ]
 
     return ",".join(filters)
