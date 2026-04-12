@@ -44,15 +44,15 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float):
         # Corner brackets
         "drawbox=x=40:y=60:w=30:h=2:color=white@0.5:t=fill",
         "drawbox=x=40:y=60:w=2:h=30:color=white@0.5:t=fill",
-        "drawbox=x=w-70:y=60:w=30:h=2:color=white@0.5:t=fill",
-        "drawbox=x=w-42:y=60:w=2:h=30:color=white@0.5:t=fill",
-        "drawbox=x=40:y=h-150:w=30:h=2:color=white@0.5:t=fill",
-        "drawbox=x=40:y=h-180:w=2:h=30:color=white@0.5:t=fill",
-        "drawbox=x=w-70:y=h-150:w=30:h=2:color=white@0.5:t=fill",
-        "drawbox=x=w-42:y=h-180:w=2:h=30:color=white@0.5:t=fill",
+        "drawbox=x=iw-70:y=60:w=30:h=2:color=white@0.5:t=fill",
+        "drawbox=x=iw-42:y=60:w=2:h=30:color=white@0.5:t=fill",
+        "drawbox=x=40:y=ih-150:w=30:h=2:color=white@0.5:t=fill",
+        "drawbox=x=40:y=ih-180:w=2:h=30:color=white@0.5:t=fill",
+        "drawbox=x=iw-70:y=ih-150:w=30:h=2:color=white@0.5:t=fill",
+        "drawbox=x=iw-42:y=ih-180:w=2:h=30:color=white@0.5:t=fill",
 
         # Progress bar background
-        "drawbox=x=20:y=h-110:w=w-40:h=3:color=white@0.15:t=fill",
+        "drawbox=x=20:y=ih-110:w=iw-40:h=3:color=white@0.15:t=fill",
 
         # SHOOTNBOX label
         "drawtext=text=SHOOTNBOX:x=20:y=h-95:fontsize=11:fontcolor=white@0.5",
