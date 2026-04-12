@@ -35,37 +35,35 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float):
 
     filters = [
         # REC dot (rouge, clignotant)
-        "drawbox=x=20:y=20:w=12:h=12:color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
+        "drawbox=x=20:y=20:w=12:h=12:color=red:t=fill:enable='lt(mod(t,1),0.5)'",
         # REC text (blanc, clignotant)
-        f"drawtext=text='REC':x=40:y=17:fontsize=14:fontcolor=white:enable='lt(mod(t\\,1)\\,0.5)'",
+        "drawtext=text='REC':x=40:y=17:fontsize=14:fontcolor=white:enable='lt(mod(t,1),0.5)'",
         # Timer top right
-        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-110:y=17:fontsize=22:fontcolor=white:font=monospace",
+        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\\\\\:%S}':x=w-110:y=17:fontsize=22:fontcolor=white",
 
         # Corner brackets - top left
-        f"drawbox=x=40:y=60:w=30:h=2:color=white@0.5:t=fill",
-        f"drawbox=x=40:y=60:w=2:h=30:color=white@0.5:t=fill",
+        "drawbox=x=40:y=60:w=30:h=2:color=white@0.5:t=fill",
+        "drawbox=x=40:y=60:w=2:h=30:color=white@0.5:t=fill",
         # Corner brackets - top right
-        f"drawbox=x=w-70:y=60:w=30:h=2:color=white@0.5:t=fill",
-        f"drawbox=x=w-42:y=60:w=2:h=30:color=white@0.5:t=fill",
+        "drawbox=x=w-70:y=60:w=30:h=2:color=white@0.5:t=fill",
+        "drawbox=x=w-42:y=60:w=2:h=30:color=white@0.5:t=fill",
         # Corner brackets - bottom left
-        f"drawbox=x=40:y=h-150:w=30:h=2:color=white@0.5:t=fill",
-        f"drawbox=x=40:y=h-180:w=2:h=30:color=white@0.5:t=fill",
+        "drawbox=x=40:y=h-150:w=30:h=2:color=white@0.5:t=fill",
+        "drawbox=x=40:y=h-180:w=2:h=30:color=white@0.5:t=fill",
         # Corner brackets - bottom right
-        f"drawbox=x=w-70:y=h-150:w=30:h=2:color=white@0.5:t=fill",
-        f"drawbox=x=w-42:y=h-180:w=2:h=30:color=white@0.5:t=fill",
+        "drawbox=x=w-70:y=h-150:w=30:h=2:color=white@0.5:t=fill",
+        "drawbox=x=w-42:y=h-180:w=2:h=30:color=white@0.5:t=fill",
 
         # Progress bar background
-        f"drawbox=x=20:y=h-110:w=w-40:h=3:color=white@0.15:t=fill",
-        # Progress bar fill (rose, avance avec le temps)
-        f"drawbox=x=20:y=h-110:w='(w-40)*t/{duration}':h=3:color=0xFF1493:t=fill",
+        "drawbox=x=20:y=h-110:w=w-40:h=3:color=white@0.15:t=fill",
 
         # SHOOTNBOX label
-        f"drawtext=text='SHOOTNBOX':x=20:y=h-95:fontsize=11:fontcolor=white@0.5",
+        "drawtext=text='SHOOTNBOX':x=20:y=h-95:fontsize=11:fontcolor=white@0.5",
         # Duration label
-        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}} / 00\\:30':x=w-150:y=h-95:fontsize=11:fontcolor=white@0.5:font=monospace",
+        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\\\\\:%S} / 00\\:30':x=w-150:y=h-95:fontsize=11:fontcolor=white@0.5",
 
         # Event name (rose)
-        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-70:fontsize=14:fontcolor=0xFF1493",
+        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-70:fontsize=14:fontcolor=pink",
     ]
 
     return ",".join(filters)
