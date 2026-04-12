@@ -55,13 +55,13 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float):
         "drawbox=x=30:y=ih-180:w=iw-60:h=6:color=white@0.2:t=fill",
 
         # SHOOTNBOX label - gros
-        "drawtext=text=SHOOTNBOX:x=30:y=ih-155:fontsize=22:fontcolor=white@0.6",
+        "drawtext=text=SHOOTNBOX:x=30:y=h-155:fontsize=22:fontcolor=white@0.6",
 
         # Timer label en bas a droite
-        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\:%S} / 00\\:30':x=w-250:y=ih-155:fontsize=22:fontcolor=white@0.6",
+        "drawtext=text='%{pts\\:gmtime\\:0\\:%M\\:%S} / 00\\:30':x=w-250:y=h-155:fontsize=22:fontcolor=white@0.6",
 
         # Event name (rose) - gros
-        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=ih-120:fontsize=28:fontcolor=pink",
+        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-120:fontsize=28:fontcolor=pink",
     ]
 
     return ",".join(filters)
