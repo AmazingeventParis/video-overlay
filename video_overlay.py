@@ -139,7 +139,35 @@ def process_video():
             if result.returncode != 0:
                 return jsonify({"error": "ffmpeg failed", "stderr": result.stderr[-1500:], "cmd": " ".join(cmd)}), 500
 
-            # Re-upload vers Supabase Storage (remplace l'original)
+            # Generer thumbnail (1ere frame)
+            thumb_path = os.path.join(tmpdir, "thumb.jpg")
+            thumb_cmd = [
+                "ffmpeg", "-y", "-i", input_path,
+                "-vframes", "1", "-q:v", "5",
+                "-vf", "scale=300:-1",
+                thumb_path
+            ]
+            subprocess.run(thumb_cmd, capture_output=True, timeout=30)
+
+            # Upload thumbnail
+            thumb_storage = storage_path.replace(".mp4", "_thumb.jpg")
+            thumbnail_url = None
+            if os.path.exists(thumb_path):
+                with open(thumb_path, "rb") as f:
+                    thumb_data = f.read()
+                try:
+                    supabase.storage.from_(BUCKET).upload(
+                        thumb_storage, thumb_data,
+                        file_options={"content-type": "image/jpeg", "upsert": "true"}
+                    )
+                except:
+                    supabase.storage.from_(BUCKET).update(
+                        thumb_storage, thumb_data,
+                        file_options={"content-type": "image/jpeg", "upsert": "true"}
+                    )
+                thumbnail_url = supabase.storage.from_(BUCKET).get_public_url(thumb_storage)
+
+            # Re-upload video avec overlay vers Supabase Storage
             with open(output_path, "rb") as f:
                 file_data = f.read()
 
@@ -149,10 +177,19 @@ def process_video():
                 file_options={"content-type": "video/mp4", "upsert": "true"}
             )
 
-            # URL publique (identique car meme path)
+            # Mettre a jour la table avec le thumbnail_url
+            if thumbnail_url:
+                video_url_original = data.get("video_url", "")
+                try:
+                    supabase.table("appshoot_photos").update(
+                        {"thumbnail_url": thumbnail_url}
+                    ).eq("photo_url", video_url_original).execute()
+                except:
+                    pass
+
             new_url = supabase.storage.from_(BUCKET).get_public_url(storage_path)
 
-            return jsonify({"success": True, "url": new_url})
+            return jsonify({"success": True, "url": new_url, "thumbnail_url": thumbnail_url})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
