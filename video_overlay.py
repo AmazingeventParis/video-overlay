@@ -183,7 +183,7 @@ def process_video():
                 try:
                     supabase.table("appshoot_photos").update(
                         {"thumbnail_url": thumbnail_url}
-                    ).eq("photo_url", video_url_original).execute()
+                    ).like("photo_url", f"%{storage_path}%").execute()
                 except:
                     pass
 
@@ -244,7 +244,7 @@ def generate_thumbnail():
             try:
                 supabase.table("appshoot_photos").update(
                     {"thumbnail_url": thumbnail_url}
-                ).eq("photo_url", video_url).execute()
+                ).like("photo_url", f"%{storage_path}%").execute()
             except:
                 pass
 
