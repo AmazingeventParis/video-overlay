@@ -195,6 +195,64 @@ def process_video():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/thumbnail", methods=["POST"])
+def generate_thumbnail():
+    """Genere un thumbnail pour une video existante sans appliquer l'overlay."""
+    data = request.json
+    video_url = data.get("video_url")
+    storage_path = data.get("storage_path")
+
+    if not video_url or not storage_path:
+        return jsonify({"error": "video_url et storage_path requis"}), 400
+
+    try:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            input_path = os.path.join(tmpdir, "input.mp4")
+            thumb_path = os.path.join(tmpdir, "thumb.jpg")
+
+            resp = requests.get(video_url, timeout=120)
+            resp.raise_for_status()
+            with open(input_path, "wb") as f:
+                f.write(resp.content)
+
+            thumb_cmd = [
+                "ffmpeg", "-y", "-i", input_path,
+                "-vframes", "1", "-q:v", "5",
+                "-vf", "scale=300:-1",
+                thumb_path
+            ]
+            subprocess.run(thumb_cmd, capture_output=True, timeout=30)
+
+            if not os.path.exists(thumb_path):
+                return jsonify({"error": "thumbnail generation failed"}), 500
+
+            thumb_storage = storage_path.replace(".mp4", "_thumb.jpg")
+            with open(thumb_path, "rb") as f:
+                thumb_data = f.read()
+            try:
+                supabase.storage.from_(BUCKET).upload(
+                    thumb_storage, thumb_data,
+                    file_options={"content-type": "image/jpeg", "upsert": "true"}
+                )
+            except:
+                supabase.storage.from_(BUCKET).update(
+                    thumb_storage, thumb_data,
+                    file_options={"content-type": "image/jpeg", "upsert": "true"}
+                )
+            thumbnail_url = supabase.storage.from_(BUCKET).get_public_url(thumb_storage)
+
+            try:
+                supabase.table("appshoot_photos").update(
+                    {"thumbnail_url": thumbnail_url}
+                ).eq("photo_url", video_url).execute()
+            except:
+                pass
+
+            return jsonify({"success": True, "thumbnail_url": thumbnail_url})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"})
