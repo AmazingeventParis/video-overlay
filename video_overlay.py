@@ -44,37 +44,37 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
 
     filters = [
         # REC dot (rouge, clignotant)
-        "drawbox=x=20:y=20:w=18:h=18:color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
+        "drawbox=x=24:y=22:w=20:h=20:color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
         # REC text (blanc, clignotant)
-        f"drawtext=text='REC':x=46:y=15:fontsize=22:fontcolor=white:enable='lt(mod(t\\,1)\\,0.5)'",
+        f"drawtext=text='REC':x=52:y=16:fontsize=26:fontcolor=white:enable='lt(mod(t\\,1)\\,0.5)'",
         # Timer top right
-        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-150:y=15:fontsize=32:fontcolor=white",
+        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-160:y=16:fontsize=34:fontcolor=white",
+
+        # Event name (rose, sous REC et timer)
+        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=58:fontsize=24:fontcolor=0xFF1493",
 
         # Corner brackets - top left
-        f"drawbox=x=30:y=55:w=50:h=3:color=white@0.8:t=fill",
-        f"drawbox=x=30:y=55:w=3:h=50:color=white@0.8:t=fill",
+        f"drawbox=x=25:y=95:w=70:h=4:color=white@0.9:t=fill",
+        f"drawbox=x=25:y=95:w=4:h=70:color=white@0.9:t=fill",
         # Corner brackets - top right
-        f"drawbox=x='iw-80':y=55:w=50:h=3:color=white@0.8:t=fill",
-        f"drawbox=x='iw-33':y=55:w=3:h=50:color=white@0.8:t=fill",
+        f"drawbox=x='iw-95':y=95:w=70:h=4:color=white@0.9:t=fill",
+        f"drawbox=x='iw-29':y=95:w=4:h=70:color=white@0.9:t=fill",
         # Corner brackets - bottom left
-        f"drawbox=x=30:y='ih-140':w=50:h=3:color=white@0.8:t=fill",
-        f"drawbox=x=30:y='ih-190':w=3:h=50:color=white@0.8:t=fill",
+        f"drawbox=x=25:y='ih-130':w=70:h=4:color=white@0.9:t=fill",
+        f"drawbox=x=25:y='ih-200':w=4:h=70:color=white@0.9:t=fill",
         # Corner brackets - bottom right
-        f"drawbox=x='iw-80':y='ih-140':w=50:h=3:color=white@0.8:t=fill",
-        f"drawbox=x='iw-33':y='ih-190':w=3:h=50:color=white@0.8:t=fill",
+        f"drawbox=x='iw-95':y='ih-130':w=70:h=4:color=white@0.9:t=fill",
+        f"drawbox=x='iw-29':y='ih-200':w=4:h=70:color=white@0.9:t=fill",
 
         # Progress bar background
-        f"drawbox=x=20:y='ih-110':w='iw-40':h=3:color=white@0.15:t=fill",
+        f"drawbox=x=20:y='ih-100':w='iw-40':h=4:color=white@0.2:t=fill",
         # Progress bar fill (rose, avance avec le temps)
-        f"drawbox=x=20:y='ih-110':w='(iw-40)*t/{duration}':h=3:color=0xFF1493:t=fill",
+        f"drawbox=x=20:y='ih-100':w='(iw-40)*t/{duration}':h=4:color=0xFF1493:t=fill",
 
         # Brand label
-        f"drawtext=text='{brand}':x=20:y=h-95:fontsize=11:fontcolor=white@0.5",
+        f"drawtext=text='{brand}':x=20:y=h-85:fontsize=14:fontcolor=white@0.6",
         # Duration label
-        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}} / 00\\:30':x=w-150:y=h-95:fontsize=11:fontcolor=white@0.5",
-
-        # Event name (rose)
-        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-70:fontsize=14:fontcolor=0xFF1493",
+        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}} / 00\\:30':x=w-170:y=h-85:fontsize=14:fontcolor=white@0.6",
     ]
 
     return ",".join(filters)
