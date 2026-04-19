@@ -27,29 +27,40 @@ s3_client = boto3.client(
 )
 
 
-def build_color_filter(matrix):
-    """Construit le filtre ffmpeg depuis une matrice 5x4.
-    Utilise format=gbrp pour passer en planar, puis geq pour la formule exacte,
-    puis reconvertit en yuv420p pour eviter l'entrelacement."""
-    if not matrix or len(matrix) != 20:
+def generate_lut_file(matrix, filepath, size=33):
+    """Genere un fichier 3D LUT (.cube) depuis une matrice 5x4.
+    Le LUT mappe chaque triplet RGB a travers la matrice, sans clamping intermediaire."""
+    with open(filepath, "w") as f:
+        f.write(f"LUT_3D_SIZE {size}\n")
+        for bi in range(size):
+            for gi in range(size):
+                for ri in range(size):
+                    r = ri / (size - 1) * 255.0
+                    g = gi / (size - 1) * 255.0
+                    b = bi / (size - 1) * 255.0
+
+                    ro = max(0.0, min(255.0, matrix[0]*r + matrix[1]*g + matrix[2]*b + matrix[4])) / 255.0
+                    go = max(0.0, min(255.0, matrix[5]*r + matrix[6]*g + matrix[7]*b + matrix[9])) / 255.0
+                    bo = max(0.0, min(255.0, matrix[10]*r + matrix[11]*g + matrix[12]*b + matrix[14])) / 255.0
+
+                    f.write(f"{ro:.6f} {go:.6f} {bo:.6f}\n")
+
+
+def build_color_filter(matrix, tmpdir=None):
+    """Construit le filtre ffmpeg lut3d depuis une matrice 5x4.
+    Genere un fichier .cube et retourne le filtre ffmpeg correspondant."""
+    if not matrix or len(matrix) != 20 or tmpdir is None:
         return None
 
-    # Verifier si la matrice est proche de l'identite (pas besoin de filtre)
-    is_identity = True
+    # Verifier si la matrice est proche de l'identite
     identity = [1,0,0,0,0, 0,1,0,0,0, 0,0,1,0,0, 0,0,0,1,0]
-    for i in range(20):
-        if abs(matrix[i] - identity[i]) > 0.001:
-            is_identity = False
-            break
-    if is_identity:
+    if all(abs(matrix[i] - identity[i]) < 0.001 for i in range(20)):
         return None
 
-    # geq en format planar pour eviter les artefacts d'entrelacement
-    r_expr = f"clip({matrix[0]:.6f}*r(X\\,Y)+{matrix[1]:.6f}*g(X\\,Y)+{matrix[2]:.6f}*b(X\\,Y)+{matrix[4]:.2f}\\,0\\,255)"
-    g_expr = f"clip({matrix[5]:.6f}*r(X\\,Y)+{matrix[6]:.6f}*g(X\\,Y)+{matrix[7]:.6f}*b(X\\,Y)+{matrix[9]:.2f}\\,0\\,255)"
-    b_expr = f"clip({matrix[10]:.6f}*r(X\\,Y)+{matrix[11]:.6f}*g(X\\,Y)+{matrix[12]:.6f}*b(X\\,Y)+{matrix[14]:.2f}\\,0\\,255)"
+    lut_path = os.path.join(tmpdir, "color_filter.cube")
+    generate_lut_file(matrix, lut_path)
 
-    return f"format=gbrp,geq=r='{r_expr}':g='{g_expr}':b='{b_expr}',format=yuv420p"
+    return f"lut3d='{lut_path}'"
 
 
 def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand: str = "SHOOTNBOX"):
@@ -168,7 +179,7 @@ def process_video():
             vf = build_ffmpeg_filter(event_name, event_type, duration, brand)
 
             # Ajouter le filtre couleur si present
-            color_vf = build_color_filter(color_matrix)
+            color_vf = build_color_filter(color_matrix, tmpdir)
             full_vf = f"{color_vf},{vf}" if color_vf else vf
             cmd = [
                 "ffmpeg", "-y", "-i", input_path,
@@ -234,7 +245,7 @@ def generate_thumbnail():
                 f.write(resp.content)
 
             # Extraire le thumbnail a 1 seconde (avec filtre couleur si present)
-            color_vf = build_color_filter(color_matrix)
+            color_vf = build_color_filter(color_matrix, tmpdir)
             vf_parts = []
             if color_vf:
                 vf_parts.append(color_vf)
