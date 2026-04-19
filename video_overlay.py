@@ -147,10 +147,12 @@ def process_video():
             # Construire le filtre
             vf = build_ffmpeg_filter(event_name, event_type, duration, brand)
 
-            # Appliquer ffmpeg
+            # Appliquer ffmpeg (pad pour dimensions paires + pix_fmt)
+            full_vf = f"pad=ceil(iw/2)*2:ceil(ih/2)*2,{vf}"
             cmd = [
                 "ffmpeg", "-y", "-i", input_path,
-                "-vf", vf,
+                "-vf", full_vf,
+                "-pix_fmt", "yuv420p",
                 "-c:a", "copy",
                 "-preset", "fast",
                 "-crf", "23",
@@ -159,7 +161,7 @@ def process_video():
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
 
             if result.returncode != 0:
-                return jsonify({"error": "ffmpeg failed", "stderr": result.stderr[-500:]}), 500
+                return jsonify({"error": "ffmpeg failed", "stderr": result.stderr[-1000:]}), 500
 
             # Re-upload vers OVH S3 (remplace l'original)
             new_url = upload_to_s3(output_path, s3_key)
