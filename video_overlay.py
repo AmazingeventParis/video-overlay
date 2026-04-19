@@ -28,27 +28,18 @@ s3_client = boto3.client(
 
 
 def build_color_filter(matrix):
-    """Construit le filtre ffmpeg colorchannelmixer + lutrgb depuis une matrice 5x4."""
+    """Construit le filtre ffmpeg geq depuis une matrice 5x4.
+    Utilise geq pour appliquer la formule complete sans clamping intermediaire,
+    ce qui donne un rendu identique a Flutter ColorFilter.matrix."""
     if not matrix or len(matrix) != 20:
         return None
 
-    mixer = (
-        f"colorchannelmixer="
-        f"rr={matrix[0]:.4f}:rg={matrix[1]:.4f}:rb={matrix[2]:.4f}:ra={matrix[3]:.4f}:"
-        f"gr={matrix[5]:.4f}:gg={matrix[6]:.4f}:gb={matrix[7]:.4f}:ga={matrix[8]:.4f}:"
-        f"br={matrix[10]:.4f}:bg={matrix[11]:.4f}:bb={matrix[12]:.4f}:ba={matrix[13]:.4f}:"
-        f"ar={matrix[15]:.4f}:ag={matrix[16]:.4f}:ab={matrix[17]:.4f}:aa={matrix[18]:.4f}"
-    )
+    # geq applique la formule pixel par pixel: output = clamp(m0*r + m1*g + m2*b + m3*a + m4)
+    r_expr = f"clip({matrix[0]:.6f}*r(X,Y) + {matrix[1]:.6f}*g(X,Y) + {matrix[2]:.6f}*b(X,Y) + {matrix[3]:.6f}*alpha(X,Y) + {matrix[4]:.2f}, 0, 255)"
+    g_expr = f"clip({matrix[5]:.6f}*r(X,Y) + {matrix[6]:.6f}*g(X,Y) + {matrix[7]:.6f}*b(X,Y) + {matrix[8]:.6f}*alpha(X,Y) + {matrix[9]:.2f}, 0, 255)"
+    b_expr = f"clip({matrix[10]:.6f}*r(X,Y) + {matrix[11]:.6f}*g(X,Y) + {matrix[12]:.6f}*b(X,Y) + {matrix[13]:.6f}*alpha(X,Y) + {matrix[14]:.2f}, 0, 255)"
 
-    r_off = int(round(matrix[4]))
-    g_off = int(round(matrix[9]))
-    b_off = int(round(matrix[14]))
-
-    if r_off != 0 or g_off != 0 or b_off != 0:
-        lut = f"lutrgb=r='clip(val+{r_off},0,255)':g='clip(val+{g_off},0,255)':b='clip(val+{b_off},0,255)'"
-        return f"{mixer},{lut}"
-
-    return mixer
+    return f"geq=r='{r_expr}':g='{g_expr}':b='{b_expr}'"
 
 
 def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand: str = "SHOOTNBOX"):
@@ -175,7 +166,7 @@ def process_video():
                 "-pix_fmt", "yuv420p",
                 "-c:a", "copy",
                 "-preset", "fast",
-                "-crf", "18",
+                "-crf", "14",
                 output_path
             ]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -203,6 +194,7 @@ def generate_thumbnail():
     video_url = data.get("video_url")
     storage_path = data.get("storage_path", "")
     s3_key = data.get("s3_key", "")
+    color_matrix = data.get("color_matrix")
 
     if not video_url:
         return jsonify({"error": "video_url requis"}), 400
@@ -231,11 +223,18 @@ def generate_thumbnail():
             with open(input_path, "wb") as f:
                 f.write(resp.content)
 
-            # Extraire le thumbnail a 1 seconde
+            # Extraire le thumbnail a 1 seconde (avec filtre couleur si present)
+            color_vf = build_color_filter(color_matrix)
+            vf_parts = []
+            if color_vf:
+                vf_parts.append(color_vf)
+            vf_parts.append("scale=480:-1")
+            thumb_vf = ",".join(vf_parts)
+
             cmd = [
                 "ffmpeg", "-y", "-i", input_path,
                 "-ss", "1", "-vframes", "1",
-                "-vf", "scale=480:-1",
+                "-vf", thumb_vf,
                 thumb_path
             ]
             subprocess.run(cmd, capture_output=True, timeout=60)
