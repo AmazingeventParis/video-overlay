@@ -30,14 +30,7 @@ s3_client = boto3.client(
 def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand: str = "SHOOTNBOX"):
     """Construit le filtre ffmpeg pour l'overlay Cinema."""
 
-    prefix_map = {
-        'mariage': 'Mariage de',
-        'anniversaire': 'Anniversaire de',
-        'entreprise': 'Evenement de',
-        'soiree': 'Soiree de',
-    }
-    prefix = prefix_map.get(event_type, 'Evenement')
-    full_event = f"{prefix} {event_name}"
+    full_event = event_name if event_name else ""
 
     # Echapper les caractères spéciaux pour ffmpeg drawtext
     full_event = full_event.replace("'", "\\'").replace(":", "\\:")
