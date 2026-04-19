@@ -48,7 +48,7 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         # REC text (blanc, clignotant)
         f"drawtext=text='REC':x=40:y=17:fontsize=14:fontcolor=white:enable='lt(mod(t\\,1)\\,0.5)'",
         # Timer top right
-        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-110:y=17:fontsize=22:fontcolor=white:fontfamily=monospace",
+        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-110:y=17:fontsize=22:fontcolor=white:font=monospace",
 
         # Corner brackets - top left
         f"drawbox=x=40:y=60:w=30:h=2:color=white@0.5:t=fill",
@@ -71,7 +71,7 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         # Brand label
         f"drawtext=text='{brand}':x=20:y=h-95:fontsize=11:fontcolor=white@0.5",
         # Duration label
-        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}} / 00\\:30':x=w-150:y=h-95:fontsize=11:fontcolor=white@0.5:fontfamily=monospace",
+        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}} / 00\\:30':x=w-150:y=h-95:fontsize=11:fontcolor=white@0.5:font=monospace",
 
         # Event name (rose)
         f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-70:fontsize=14:fontcolor=0xFF1493",
