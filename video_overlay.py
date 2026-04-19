@@ -64,9 +64,9 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         f"drawbox=x=w-42:y=h-180:w=2:h=30:color=white@0.5:t=fill",
 
         # Progress bar background
-        f"drawbox=x=20:y=h-110:w=w-40:h=3:color=white@0.15:t=fill",
+        f"drawbox=x=20:y=h-110:w='iw-40':h=3:color=white@0.15:t=fill",
         # Progress bar fill (rose, avance avec le temps)
-        f"drawbox=x=20:y=h-110:w='(w-40)*t/{duration}':h=3:color=0xFF1493:t=fill",
+        f"drawbox=x=20:y=h-110:w='(iw-40)*t/{duration}':h=3:color=0xFF1493:t=fill",
 
         # Brand label
         f"drawtext=text='{brand}':x=20:y=h-95:fontsize=11:fontcolor=white@0.5",
@@ -147,8 +147,8 @@ def process_video():
             # Construire le filtre
             vf = build_ffmpeg_filter(event_name, event_type, duration, brand)
 
-            # Appliquer ffmpeg (pad pour dimensions paires + pix_fmt)
-            full_vf = f"pad=ceil(iw/2)*2:ceil(ih/2)*2,{vf}"
+            # Appliquer ffmpeg
+            full_vf = vf
             cmd = [
                 "ffmpeg", "-y", "-i", input_path,
                 "-vf", full_vf,
