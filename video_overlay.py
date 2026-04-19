@@ -28,18 +28,28 @@ s3_client = boto3.client(
 
 
 def build_color_filter(matrix):
-    """Construit le filtre ffmpeg geq depuis une matrice 5x4.
-    Utilise geq pour appliquer la formule complete sans clamping intermediaire,
-    ce qui donne un rendu identique a Flutter ColorFilter.matrix."""
+    """Construit le filtre ffmpeg depuis une matrice 5x4.
+    Utilise format=gbrp pour passer en planar, puis geq pour la formule exacte,
+    puis reconvertit en yuv420p pour eviter l'entrelacement."""
     if not matrix or len(matrix) != 20:
         return None
 
-    # geq applique la formule pixel par pixel: output = clamp(m0*r + m1*g + m2*b + m3*a + m4)
-    r_expr = f"clip({matrix[0]:.6f}*r(X,Y) + {matrix[1]:.6f}*g(X,Y) + {matrix[2]:.6f}*b(X,Y) + {matrix[3]:.6f}*alpha(X,Y) + {matrix[4]:.2f}, 0, 255)"
-    g_expr = f"clip({matrix[5]:.6f}*r(X,Y) + {matrix[6]:.6f}*g(X,Y) + {matrix[7]:.6f}*b(X,Y) + {matrix[8]:.6f}*alpha(X,Y) + {matrix[9]:.2f}, 0, 255)"
-    b_expr = f"clip({matrix[10]:.6f}*r(X,Y) + {matrix[11]:.6f}*g(X,Y) + {matrix[12]:.6f}*b(X,Y) + {matrix[13]:.6f}*alpha(X,Y) + {matrix[14]:.2f}, 0, 255)"
+    # Verifier si la matrice est proche de l'identite (pas besoin de filtre)
+    is_identity = True
+    identity = [1,0,0,0,0, 0,1,0,0,0, 0,0,1,0,0, 0,0,0,1,0]
+    for i in range(20):
+        if abs(matrix[i] - identity[i]) > 0.001:
+            is_identity = False
+            break
+    if is_identity:
+        return None
 
-    return f"geq=r='{r_expr}':g='{g_expr}':b='{b_expr}'"
+    # geq en format planar pour eviter les artefacts d'entrelacement
+    r_expr = f"clip({matrix[0]:.6f}*r(X\\,Y)+{matrix[1]:.6f}*g(X\\,Y)+{matrix[2]:.6f}*b(X\\,Y)+{matrix[4]:.2f}\\,0\\,255)"
+    g_expr = f"clip({matrix[5]:.6f}*r(X\\,Y)+{matrix[6]:.6f}*g(X\\,Y)+{matrix[7]:.6f}*b(X\\,Y)+{matrix[9]:.2f}\\,0\\,255)"
+    b_expr = f"clip({matrix[10]:.6f}*r(X\\,Y)+{matrix[11]:.6f}*g(X\\,Y)+{matrix[12]:.6f}*b(X\\,Y)+{matrix[14]:.2f}\\,0\\,255)"
+
+    return f"format=gbrp,geq=r='{r_expr}':g='{g_expr}':b='{b_expr}',format=yuv420p"
 
 
 def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand: str = "SHOOTNBOX"):
@@ -165,7 +175,7 @@ def process_video():
                 "-vf", full_vf,
                 "-pix_fmt", "yuv420p",
                 "-c:a", "copy",
-                "-preset", "fast",
+                "-preset", "medium",
                 "-crf", "14",
                 output_path
             ]
