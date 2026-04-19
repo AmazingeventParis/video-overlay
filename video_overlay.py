@@ -1,24 +1,33 @@
 """
-Service d'incrustation de masque Cinema sur les videos MyShootnbox.
-Telecharge la video depuis Supabase, applique l'overlay ffmpeg, re-upload.
+Service d'incrustation de masque Cinema sur les videos MyShootnbox / MySmakk.
+Telecharge la video depuis OVH S3, applique l'overlay ffmpeg, re-upload sur S3.
 """
 import os
 import subprocess
 import tempfile
 import requests
+import boto3
 from flask import Flask, request, jsonify
-from supabase import create_client
 
 app = Flask(__name__)
 
-SUPABASE_URL = "https://supabase-api.swipego.app"
-SUPABASE_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3MTI3NDIyMCwiZXhwIjo0OTI2OTQ3ODIwLCJyb2xlIjoic2VydmljZV9yb2xlIn0.iqPsHjDWX9X2942nD1lsSin0yNvob06s0qP_FDTShns"
-BUCKET = "appshoot-photos"
+# OVH S3 config
+S3_ACCESS_KEY = "3d0274222c2a41fa8bb7dbd0248e8527"
+S3_SECRET_KEY = "ddb9ce6f823045ef81952928666a7646"
+S3_ENDPOINT = "https://s3.sbg.io.cloud.ovh.net"
+S3_BUCKET = "app-media-shootnbox"
+S3_PUBLIC_HOST = "app-media-shootnbox.s3.sbg.io.cloud.ovh.net"
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+s3_client = boto3.client(
+    "s3",
+    endpoint_url=S3_ENDPOINT,
+    aws_access_key_id=S3_ACCESS_KEY,
+    aws_secret_access_key=S3_SECRET_KEY,
+    region_name="sbg",
+)
 
 
-def build_ffmpeg_filter(event_name: str, event_type: str, duration: float):
+def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand: str = "SHOOTNBOX"):
     """Construit le filtre ffmpeg pour l'overlay Cinema."""
 
     prefix_map = {
@@ -28,51 +37,44 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float):
         'soiree': 'Soiree de',
     }
     prefix = prefix_map.get(event_type, 'Evenement')
-    # Eviter la redondance "Anniversaire de Les 30 ans de..."
-    if event_name.lower().startswith(('les ', 'le ', 'la ', 'l\'')):
-        full_event = f"{prefix} {event_name}"
-    else:
-        full_event = f"{prefix} {event_name}"
+    full_event = f"{prefix} {event_name}"
 
     # Echapper les caractères spéciaux pour ffmpeg drawtext
     full_event = full_event.replace("'", "\\'").replace(":", "\\:")
 
     filters = [
-        # === HAUT : bandeau noir ===
-        "drawbox=x=0:y=0:w=iw:h=100:color=black@0.5:t=fill",
+        # REC dot (rouge, clignotant)
+        "drawbox=x=20:y=20:w=12:h=12:color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
+        # REC text (blanc, clignotant)
+        f"drawtext=text='REC':x=40:y=17:fontsize=14:fontcolor=white:enable='lt(mod(t\\,1)\\,0.5)'",
+        # Timer top right
+        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-110:y=17:fontsize=22:fontcolor=white:fontfamily=monospace",
 
-        # Badge REC rouge (rectangle)
-        "drawbox=x=20:y=25:w=140:h=50:color=0x990000@0.95:t=fill:enable='lt(mod(t,1),0.5)'",
-        # Cercle blanc dans le badge
-        "drawtext=text='\u25CF':x=35:y=33:fontsize=32:fontcolor=white:enable='lt(mod(t,1),0.5)'",
-        # Texte REC
-        "drawtext=text=REC:x=65:y=33:fontsize=32:fontcolor=white:enable='lt(mod(t,1),0.5)'",
+        # Corner brackets - top left
+        f"drawbox=x=40:y=60:w=30:h=2:color=white@0.5:t=fill",
+        f"drawbox=x=40:y=60:w=2:h=30:color=white@0.5:t=fill",
+        # Corner brackets - top right
+        f"drawbox=x=w-70:y=60:w=30:h=2:color=white@0.5:t=fill",
+        f"drawbox=x=w-42:y=60:w=2:h=30:color=white@0.5:t=fill",
+        # Corner brackets - bottom left
+        f"drawbox=x=40:y=h-150:w=30:h=2:color=white@0.5:t=fill",
+        f"drawbox=x=40:y=h-180:w=2:h=30:color=white@0.5:t=fill",
+        # Corner brackets - bottom right
+        f"drawbox=x=w-70:y=h-150:w=30:h=2:color=white@0.5:t=fill",
+        f"drawbox=x=w-42:y=h-180:w=2:h=30:color=white@0.5:t=fill",
 
-        # Timer en haut a droite - fond noir
-        "drawbox=x=iw-200:y=25:w=180:h=50:color=black@0.6:t=fill",
-        # Timer texte (minutes:secondes)
-        "drawtext=text='%{eif\\:trunc(t/60)\\:d\\:2}\\:%{eif\\:mod(trunc(t),60)\\:d\\:2}':x=w-170:y=33:fontsize=32:fontcolor=white",
+        # Progress bar background
+        f"drawbox=x=20:y=h-110:w=w-40:h=3:color=white@0.15:t=fill",
+        # Progress bar fill (rose, avance avec le temps)
+        f"drawbox=x=20:y=h-110:w='(w-40)*t/{duration}':h=3:color=0xFF1493:t=fill",
 
-        # === COINS DE CADRAGE ===
-        "drawbox=x=40:y=140:w=80:h=6:color=white@0.7:t=fill",
-        "drawbox=x=40:y=140:w=6:h=80:color=white@0.7:t=fill",
-        "drawbox=x=iw-120:y=140:w=80:h=6:color=white@0.7:t=fill",
-        "drawbox=x=iw-46:y=140:w=6:h=80:color=white@0.7:t=fill",
-        "drawbox=x=40:y=ih-280:w=80:h=6:color=white@0.7:t=fill",
-        "drawbox=x=40:y=ih-360:w=6:h=80:color=white@0.7:t=fill",
-        "drawbox=x=iw-120:y=ih-280:w=80:h=6:color=white@0.7:t=fill",
-        "drawbox=x=iw-46:y=ih-360:w=6:h=80:color=white@0.7:t=fill",
+        # Brand label
+        f"drawtext=text='{brand}':x=20:y=h-95:fontsize=11:fontcolor=white@0.5",
+        # Duration label
+        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}} / 00\\:30':x=w-150:y=h-95:fontsize=11:fontcolor=white@0.5:fontfamily=monospace",
 
-        # === BAS : bandeau noir ===
-        "drawbox=x=0:y=ih-130:w=iw:h=130:color=black@0.6:t=fill",
-
-        # SHOOTNBOX petit en haut du bandeau
-        "drawtext=text=SHOOTNBOX:x=(w-text_w)/2:y=h-125:fontsize=16:fontcolor=white@0.5",
-
-        # Carte fuchsia centree - large
-        "drawbox=x=20:y=ih-95:w=iw-40:h=55:color=0xFF1493@0.95:t=fill",
-        # Texte blanc sur la carte fuchsia
-        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-84:fontsize=28:fontcolor=white",
+        # Event name (rose)
+        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=h-70:fontsize=14:fontcolor=0xFF1493",
     ]
 
     return ",".join(filters)
@@ -90,20 +92,43 @@ def get_video_duration(filepath: str) -> float:
         return 30.0
 
 
+def upload_to_s3(filepath: str, s3_key: str, content_type: str = "video/mp4") -> str:
+    """Upload un fichier vers OVH S3 et retourne l'URL publique."""
+    s3_client.upload_file(
+        filepath, S3_BUCKET, s3_key,
+        ExtraArgs={"ContentType": content_type, "ACL": "public-read"}
+    )
+    return f"https://{S3_PUBLIC_HOST}/{s3_key}"
+
+
 @app.route("/process", methods=["POST"])
 def process_video():
     """
     POST /process
-    Body JSON: { "video_url": "...", "storage_path": "...", "event_name": "...", "event_type": "..." }
+    Body JSON: { "video_url": "...", "storage_path": "...", "s3_key": "...",
+                 "event_name": "...", "event_type": "...", "brand": "..." }
     """
     data = request.json
     video_url = data.get("video_url")
     storage_path = data.get("storage_path")
+    s3_key = data.get("s3_key", "")
     event_name = data.get("event_name", "")
     event_type = data.get("event_type", "soiree")
+    brand = data.get("brand", "SHOOTNBOX")
 
-    if not video_url or not storage_path:
-        return jsonify({"error": "video_url et storage_path requis"}), 400
+    if not video_url:
+        return jsonify({"error": "video_url requis"}), 400
+
+    # Determiner la cle S3 pour le re-upload
+    if not s3_key and storage_path:
+        # Extraire la cle S3 depuis l'URL si possible
+        if S3_PUBLIC_HOST in video_url:
+            s3_key = video_url.split(f"https://{S3_PUBLIC_HOST}/")[1]
+        else:
+            s3_key = storage_path
+
+    if not s3_key:
+        return jsonify({"error": "s3_key ou storage_path requis"}), 400
 
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -120,76 +145,26 @@ def process_video():
             duration = get_video_duration(input_path)
 
             # Construire le filtre
-            vf = build_ffmpeg_filter(event_name, event_type, duration)
+            vf = build_ffmpeg_filter(event_name, event_type, duration, brand)
 
-            # Appliquer ffmpeg (autorotate preserve metadata)
+            # Appliquer ffmpeg
             cmd = [
-                "ffmpeg", "-y",
-                "-i", input_path,
+                "ffmpeg", "-y", "-i", input_path,
                 "-vf", vf,
                 "-c:a", "copy",
                 "-preset", "fast",
                 "-crf", "23",
-                "-map_metadata", "0",
-                "-movflags", "+faststart",
                 output_path
             ]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
 
             if result.returncode != 0:
-                return jsonify({"error": "ffmpeg failed", "stderr": result.stderr[-1500:], "cmd": " ".join(cmd)}), 500
+                return jsonify({"error": "ffmpeg failed", "stderr": result.stderr[-500:]}), 500
 
-            # Generer thumbnail (1ere frame)
-            thumb_path = os.path.join(tmpdir, "thumb.jpg")
-            thumb_cmd = [
-                "ffmpeg", "-y", "-i", input_path,
-                "-vframes", "1", "-q:v", "5",
-                "-vf", "scale=300:-1",
-                thumb_path
-            ]
-            subprocess.run(thumb_cmd, capture_output=True, timeout=30)
+            # Re-upload vers OVH S3 (remplace l'original)
+            new_url = upload_to_s3(output_path, s3_key)
 
-            # Upload thumbnail
-            thumb_storage = storage_path.replace(".mp4", "_thumb.jpg")
-            thumbnail_url = None
-            if os.path.exists(thumb_path):
-                with open(thumb_path, "rb") as f:
-                    thumb_data = f.read()
-                try:
-                    supabase.storage.from_(BUCKET).upload(
-                        thumb_storage, thumb_data,
-                        file_options={"content-type": "image/jpeg", "upsert": "true"}
-                    )
-                except:
-                    supabase.storage.from_(BUCKET).update(
-                        thumb_storage, thumb_data,
-                        file_options={"content-type": "image/jpeg", "upsert": "true"}
-                    )
-                thumbnail_url = supabase.storage.from_(BUCKET).get_public_url(thumb_storage)
-
-            # Re-upload video avec overlay vers Supabase Storage
-            with open(output_path, "rb") as f:
-                file_data = f.read()
-
-            supabase.storage.from_(BUCKET).update(
-                storage_path,
-                file_data,
-                file_options={"content-type": "video/mp4", "upsert": "true"}
-            )
-
-            # Mettre a jour la table avec le thumbnail_url
-            if thumbnail_url:
-                video_url_original = data.get("video_url", "")
-                try:
-                    supabase.table("appshoot_photos").update(
-                        {"thumbnail_url": thumbnail_url}
-                    ).like("photo_url", f"%{storage_path}%").execute()
-                except:
-                    pass
-
-            new_url = supabase.storage.from_(BUCKET).get_public_url(storage_path)
-
-            return jsonify({"success": True, "url": new_url, "thumbnail_url": thumbnail_url})
+            return jsonify({"success": True, "url": new_url})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -197,58 +172,60 @@ def process_video():
 
 @app.route("/thumbnail", methods=["POST"])
 def generate_thumbnail():
-    """Genere un thumbnail pour une video existante sans appliquer l'overlay."""
+    """
+    POST /thumbnail
+    Body JSON: { "video_url": "...", "storage_path": "...", "s3_key": "..." }
+    Genere un thumbnail depuis la video et l'upload sur S3.
+    """
     data = request.json
     video_url = data.get("video_url")
-    storage_path = data.get("storage_path")
+    storage_path = data.get("storage_path", "")
+    s3_key = data.get("s3_key", "")
 
-    if not video_url or not storage_path:
-        return jsonify({"error": "video_url et storage_path requis"}), 400
+    if not video_url:
+        return jsonify({"error": "video_url requis"}), 400
+
+    # Determiner la cle S3 pour le thumbnail
+    if not s3_key:
+        if S3_PUBLIC_HOST in video_url:
+            s3_key = video_url.split(f"https://{S3_PUBLIC_HOST}/")[1]
+        elif storage_path:
+            s3_key = storage_path
+
+    # Remplacer .mp4 par _thumb.jpg
+    thumb_key = s3_key.rsplit('.', 1)[0] + '_thumb.jpg' if s3_key else ""
+
+    if not thumb_key:
+        return jsonify({"error": "impossible de determiner le chemin du thumbnail"}), 400
 
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
             input_path = os.path.join(tmpdir, "input.mp4")
             thumb_path = os.path.join(tmpdir, "thumb.jpg")
 
+            # Telecharger la video
             resp = requests.get(video_url, timeout=120)
             resp.raise_for_status()
             with open(input_path, "wb") as f:
                 f.write(resp.content)
 
-            thumb_cmd = [
+            # Extraire le thumbnail a 1 seconde
+            cmd = [
                 "ffmpeg", "-y", "-i", input_path,
-                "-vframes", "1", "-q:v", "5",
-                "-vf", "scale=300:-1",
+                "-ss", "1", "-vframes", "1",
+                "-vf", "scale=480:-1",
                 thumb_path
             ]
-            subprocess.run(thumb_cmd, capture_output=True, timeout=30)
+            subprocess.run(cmd, capture_output=True, timeout=60)
 
             if not os.path.exists(thumb_path):
                 return jsonify({"error": "thumbnail generation failed"}), 500
 
-            thumb_storage = storage_path.replace(".mp4", "_thumb.jpg")
-            with open(thumb_path, "rb") as f:
-                thumb_data = f.read()
-            try:
-                supabase.storage.from_(BUCKET).upload(
-                    thumb_storage, thumb_data,
-                    file_options={"content-type": "image/jpeg", "upsert": "true"}
-                )
-            except:
-                supabase.storage.from_(BUCKET).update(
-                    thumb_storage, thumb_data,
-                    file_options={"content-type": "image/jpeg", "upsert": "true"}
-                )
-            thumbnail_url = supabase.storage.from_(BUCKET).get_public_url(thumb_storage)
+            # Upload vers S3
+            thumb_url = upload_to_s3(thumb_path, thumb_key, "image/jpeg")
 
-            try:
-                supabase.table("appshoot_photos").update(
-                    {"thumbnail_url": thumbnail_url}
-                ).like("photo_url", f"%{storage_path}%").execute()
-            except:
-                pass
+            return jsonify({"success": True, "thumbnail_url": thumb_url})
 
-            return jsonify({"success": True, "thumbnail_url": thumbnail_url})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
