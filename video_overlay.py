@@ -64,10 +64,8 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         # Progress bar fill (rose, avance avec le temps)
         f"drawbox=x=20:y='ih-100':w='(iw-40)*t/{duration}':h=4:color=0xFF1493:t=fill",
 
-        # Brand label
-        f"drawtext=text='{brand}':x=20:y=h-85:fontsize=14:fontcolor=white@0.6",
-        # Duration label
-        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}} / 00\\:30':x=w-170:y=h-85:fontsize=14:fontcolor=white@0.6",
+        # Brand label (centré, plus grand)
+        f"drawtext=text='{brand}':x=(w-text_w)/2:y=h-85:fontsize=20:fontcolor=white@0.7",
     ]
 
     return ",".join(filters)
