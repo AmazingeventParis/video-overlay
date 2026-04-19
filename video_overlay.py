@@ -35,16 +35,19 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
     # Echapper les caractères spéciaux pour ffmpeg drawtext
     full_event = full_event.replace("'", "\\'").replace(":", "\\:")
 
+    font = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+    font_light = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+
     filters = [
         # REC dot (rouge, clignotant)
         "drawbox=x=24:y=20:w=20:h=20:color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
         # REC text (blanc, clignotant)
-        f"drawtext=text='REC':x=50:y=16:fontsize=28:fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1:enable='lt(mod(t\\,1)\\,0.5)'",
+        f"drawtext=text='REC':x=50:y=16:fontsize=28:fontfile='{font}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1:enable='lt(mod(t\\,1)\\,0.5)'",
         # Timer top right
-        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-170:y=16:fontsize=36:fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1",
+        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-170:y=16:fontsize=36:fontfile='{font_light}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1",
 
-        # Event name (rose, plus grand, ombre legere)
-        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=62:fontsize=30:fontcolor=0xFF1493:shadowcolor=black@0.4:shadowx=1:shadowy=1",
+        # Event name (rose, gras, net)
+        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=62:fontsize=30:fontfile='{font}':fontcolor=0xFF1493:shadowcolor=black@0.4:shadowx=1:shadowy=1",
 
         # Corner brackets - top left
         f"drawbox=x=25:y=100:w=70:h=4:color=white@0.9:t=fill",
@@ -65,7 +68,7 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         f"drawbox=x=20:y='ih-100':w='(iw-40)*t/{duration}':h=4:color=0xFF1493:t=fill",
 
         # Brand label (centré, plus grand)
-        f"drawtext=text='{brand}':x=(w-text_w)/2:y=h-85:fontsize=22:fontcolor=white@0.7:shadowcolor=black@0.4:shadowx=1:shadowy=1",
+        f"drawtext=text='{brand}':x=(w-text_w)/2:y=h-85:fontsize=22:fontfile='{font}':fontcolor=white@0.7:shadowcolor=black@0.4:shadowx=1:shadowy=1",
     ]
 
     return ",".join(filters)
