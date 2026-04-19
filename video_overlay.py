@@ -51,17 +51,17 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-150:y=15:fontsize=32:fontcolor=white",
 
         # Corner brackets - top left
-        f"drawbox=x=40:y=60:w=30:h=2:color=white@0.5:t=fill",
-        f"drawbox=x=40:y=60:w=2:h=30:color=white@0.5:t=fill",
+        f"drawbox=x=30:y=55:w=50:h=3:color=white@0.8:t=fill",
+        f"drawbox=x=30:y=55:w=3:h=50:color=white@0.8:t=fill",
         # Corner brackets - top right
-        f"drawbox=x='iw-70':y=60:w=30:h=2:color=white@0.5:t=fill",
-        f"drawbox=x='iw-42':y=60:w=2:h=30:color=white@0.5:t=fill",
+        f"drawbox=x='iw-80':y=55:w=50:h=3:color=white@0.8:t=fill",
+        f"drawbox=x='iw-33':y=55:w=3:h=50:color=white@0.8:t=fill",
         # Corner brackets - bottom left
-        f"drawbox=x=40:y='ih-150':w=30:h=2:color=white@0.5:t=fill",
-        f"drawbox=x=40:y='ih-180':w=2:h=30:color=white@0.5:t=fill",
+        f"drawbox=x=30:y='ih-140':w=50:h=3:color=white@0.8:t=fill",
+        f"drawbox=x=30:y='ih-190':w=3:h=50:color=white@0.8:t=fill",
         # Corner brackets - bottom right
-        f"drawbox=x='iw-70':y='ih-150':w=30:h=2:color=white@0.5:t=fill",
-        f"drawbox=x='iw-42':y='ih-180':w=2:h=30:color=white@0.5:t=fill",
+        f"drawbox=x='iw-80':y='ih-140':w=50:h=3:color=white@0.8:t=fill",
+        f"drawbox=x='iw-33':y='ih-190':w=3:h=50:color=white@0.8:t=fill",
 
         # Progress bar background
         f"drawbox=x=20:y='ih-110':w='iw-40':h=3:color=white@0.15:t=fill",
