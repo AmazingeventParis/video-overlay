@@ -37,21 +37,21 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
 
     filters = [
         # REC dot (rouge, clignotant)
-        "drawbox=x=24:y=18:w=18:h=18:color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
+        "drawbox=x=24:y=20:w=20:h=20:color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
         # REC text (blanc, clignotant)
-        f"drawtext=text='REC':x=48:y=16:fontsize=26:fontcolor=white:enable='lt(mod(t\\,1)\\,0.5)'",
+        f"drawtext=text='REC':x=50:y=16:fontsize=28:fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1:enable='lt(mod(t\\,1)\\,0.5)'",
         # Timer top right
-        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-160:y=16:fontsize=34:fontcolor=white",
+        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-170:y=16:fontsize=36:fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1",
 
-        # Event name (rose, net avec ombre noire pour lisibilite)
-        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=58:fontsize=26:fontcolor=0xFF1493:shadowcolor=black@0.6:shadowx=2:shadowy=2",
+        # Event name (rose, plus grand, ombre legere)
+        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=62:fontsize=30:fontcolor=0xFF1493:shadowcolor=black@0.4:shadowx=1:shadowy=1",
 
         # Corner brackets - top left
-        f"drawbox=x=25:y=95:w=70:h=4:color=white@0.9:t=fill",
-        f"drawbox=x=25:y=95:w=4:h=70:color=white@0.9:t=fill",
+        f"drawbox=x=25:y=100:w=70:h=4:color=white@0.9:t=fill",
+        f"drawbox=x=25:y=100:w=4:h=70:color=white@0.9:t=fill",
         # Corner brackets - top right
-        f"drawbox=x='iw-95':y=95:w=70:h=4:color=white@0.9:t=fill",
-        f"drawbox=x='iw-29':y=95:w=4:h=70:color=white@0.9:t=fill",
+        f"drawbox=x='iw-95':y=100:w=70:h=4:color=white@0.9:t=fill",
+        f"drawbox=x='iw-29':y=100:w=4:h=70:color=white@0.9:t=fill",
         # Corner brackets - bottom left
         f"drawbox=x=25:y='ih-130':w=70:h=4:color=white@0.9:t=fill",
         f"drawbox=x=25:y='ih-200':w=4:h=70:color=white@0.9:t=fill",
@@ -65,7 +65,7 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         f"drawbox=x=20:y='ih-100':w='(iw-40)*t/{duration}':h=4:color=0xFF1493:t=fill",
 
         # Brand label (centré, plus grand)
-        f"drawtext=text='{brand}':x=(w-text_w)/2:y=h-85:fontsize=20:fontcolor=white@0.7",
+        f"drawtext=text='{brand}':x=(w-text_w)/2:y=h-85:fontsize=22:fontcolor=white@0.7:shadowcolor=black@0.4:shadowx=1:shadowy=1",
     ]
 
     return ",".join(filters)
@@ -146,7 +146,7 @@ def process_video():
                 "-pix_fmt", "yuv420p",
                 "-c:a", "copy",
                 "-preset", "fast",
-                "-crf", "23",
+                "-crf", "18",
                 output_path
             ]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
