@@ -27,6 +27,30 @@ s3_client = boto3.client(
 )
 
 
+def build_color_filter(matrix):
+    """Construit le filtre ffmpeg colorchannelmixer + lutrgb depuis une matrice 5x4."""
+    if not matrix or len(matrix) != 20:
+        return None
+
+    mixer = (
+        f"colorchannelmixer="
+        f"rr={matrix[0]:.4f}:rg={matrix[1]:.4f}:rb={matrix[2]:.4f}:ra={matrix[3]:.4f}:"
+        f"gr={matrix[5]:.4f}:gg={matrix[6]:.4f}:gb={matrix[7]:.4f}:ga={matrix[8]:.4f}:"
+        f"br={matrix[10]:.4f}:bg={matrix[11]:.4f}:bb={matrix[12]:.4f}:ba={matrix[13]:.4f}:"
+        f"ar={matrix[15]:.4f}:ag={matrix[16]:.4f}:ab={matrix[17]:.4f}:aa={matrix[18]:.4f}"
+    )
+
+    r_off = int(round(matrix[4]))
+    g_off = int(round(matrix[9]))
+    b_off = int(round(matrix[14]))
+
+    if r_off != 0 or g_off != 0 or b_off != 0:
+        lut = f"lutrgb=r='clip(val+{r_off},0,255)':g='clip(val+{g_off},0,255)':b='clip(val+{b_off},0,255)'"
+        return f"{mixer},{lut}"
+
+    return mixer
+
+
 def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand: str = "SHOOTNBOX"):
     """Construit le filtre ffmpeg pour l'overlay Cinema."""
 
@@ -109,6 +133,7 @@ def process_video():
     event_name = data.get("event_name", "")
     event_type = data.get("event_type", "soiree")
     brand = data.get("brand", "SHOOTNBOX")
+    color_matrix = data.get("color_matrix")
 
     if not video_url:
         return jsonify({"error": "video_url requis"}), 400
@@ -141,8 +166,9 @@ def process_video():
             # Construire le filtre
             vf = build_ffmpeg_filter(event_name, event_type, duration, brand)
 
-            # Appliquer ffmpeg
-            full_vf = vf
+            # Ajouter le filtre couleur si present
+            color_vf = build_color_filter(color_matrix)
+            full_vf = f"{color_vf},{vf}" if color_vf else vf
             cmd = [
                 "ffmpeg", "-y", "-i", input_path,
                 "-vf", full_vf,
