@@ -37,14 +37,14 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
 
     filters = [
         # REC dot (rouge, clignotant)
-        "drawbox=x=24:y=22:w=20:h=20:color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
+        "drawbox=x=24:y=18:w=18:h=18:color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
         # REC text (blanc, clignotant)
-        f"drawtext=text='REC':x=52:y=16:fontsize=26:fontcolor=white:enable='lt(mod(t\\,1)\\,0.5)'",
+        f"drawtext=text='REC':x=48:y=16:fontsize=26:fontcolor=white:enable='lt(mod(t\\,1)\\,0.5)'",
         # Timer top right
         f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-160:y=16:fontsize=34:fontcolor=white",
 
-        # Event name (rose, sous REC et timer)
-        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=58:fontsize=24:fontcolor=0xFF1493",
+        # Event name (rose, gras, sous REC et timer)
+        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=58:fontsize=24:fontcolor=0xFF1493:borderw=1:bordercolor=0xFF1493",
 
         # Corner brackets - top left
         f"drawbox=x=25:y=95:w=70:h=4:color=white@0.9:t=fill",
