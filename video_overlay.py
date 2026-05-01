@@ -78,6 +78,13 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
     event_size = max(round(video_width * 30 / ref_w), 14)
     brand_size = max(round(video_width * 22 / ref_w), 12)
 
+    # Positions et tailles REC dot proportionnelles a la largeur (calibre 1080p)
+    rec_dot_x = round(video_width * 24 / ref_w)
+    rec_dot_y = round(video_width * 20 / ref_w)
+    rec_dot_size = max(round(video_width * 20 / ref_w), 10)
+    rec_text_x = round(video_width * 50 / ref_w)
+    rec_text_y = round(video_width * 16 / ref_w)
+
     full_event = event_name if event_name else ""
 
     # Echapper les caractères spéciaux pour ffmpeg drawtext
@@ -87,10 +94,10 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
     font_light = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
     filters = [
-        # REC dot (rouge, clignotant) - taille et position proportionnelles a la largeur (calibre 1080p)
-        f"drawbox=x='iw*0.0222':y='iw*0.0185':w='iw*0.0185':h='iw*0.0185':color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
-        # REC text (blanc, clignotant) - position proportionnelle aussi
-        f"drawtext=text='REC':x='iw*0.0463':y='iw*0.0148':fontsize={rec_size}:fontfile='{font}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1:enable='lt(mod(t\\,1)\\,0.5)'",
+        # REC dot (rouge, clignotant) - valeurs en pixels calculees en Python
+        f"drawbox=x={rec_dot_x}:y={rec_dot_y}:w={rec_dot_size}:h={rec_dot_size}:color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
+        # REC text (blanc, clignotant) - valeurs en pixels calculees en Python
+        f"drawtext=text='REC':x={rec_text_x}:y={rec_text_y}:fontsize={rec_size}:fontfile='{font}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1:enable='lt(mod(t\\,1)\\,0.5)'",
         # Timer top right (aligne dynamiquement a w-text_w avec marge 20)
         f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x='w-text_w-20':y=16:fontsize={timer_size}:fontfile='{font_light}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1",
 
