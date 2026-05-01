@@ -94,8 +94,8 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         # Timer top right (aligne dynamiquement a w-text_w avec marge 20)
         f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x='w-text_w-20':y=16:fontsize={timer_size}:fontfile='{font_light}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1",
 
-        # Event name (rose, gras, net)
-        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=62:fontsize={event_size}:fontfile='{font}':fontcolor=0xFF1493:shadowcolor=black@0.4:shadowx=1:shadowy=1",
+        # Event name (rose sur fond blanc semi-transparent pour visibilite sur tout fond)
+        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=62:fontsize={event_size}:fontfile='{font}':fontcolor=0xFF1493:box=1:boxcolor=white@0.85:boxborderw=8",
 
         # Corner brackets - dimensions proportionnelles a la hauteur (calibre 70px sur 1920p Android)
         # Corner brackets - top left
