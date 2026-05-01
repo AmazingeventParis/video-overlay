@@ -104,17 +104,17 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         # Corner brackets - top right
         f"drawbox=x='iw-95':y=100:w=70:h=4:color=white@0.9:t=fill",
         f"drawbox=x='iw-29':y=100:w=4:h='ih*0.0365':color=white@0.9:t=fill",
-        # Corner brackets - bottom left (remontes pour ne pas toucher la barre rose, ~50px au-dessus)
-        f"drawbox=x=25:y='ih*0.91':w=70:h=4:color=white@0.9:t=fill",
-        f"drawbox=x=25:y='ih*0.874':w=4:h='ih*0.0365':color=white@0.9:t=fill",
+        # Corner brackets - bottom left (remontes encore pour ne pas toucher la barre rose)
+        f"drawbox=x=25:y='ih*0.88':w=70:h=4:color=white@0.9:t=fill",
+        f"drawbox=x=25:y='ih*0.844':w=4:h='ih*0.0365':color=white@0.9:t=fill",
         # Corner brackets - bottom right
-        f"drawbox=x='iw-95':y='ih*0.91':w=70:h=4:color=white@0.9:t=fill",
-        f"drawbox=x='iw-29':y='ih*0.874':w=4:h='ih*0.0365':color=white@0.9:t=fill",
+        f"drawbox=x='iw-95':y='ih*0.88':w=70:h=4:color=white@0.9:t=fill",
+        f"drawbox=x='iw-29':y='ih*0.844':w=4:h='ih*0.0365':color=white@0.9:t=fill",
 
-        # Progress bar background (proportionnel, calibre 1920p)
-        f"drawbox=x=20:y='ih*0.948':w='iw-40':h=4:color=white@0.2:t=fill",
+        # Progress bar background (remontee pour laisser espace avec SHOOTNBOX)
+        f"drawbox=x=20:y='ih*0.92':w='iw-40':h=4:color=white@0.2:t=fill",
         # Progress bar fill (rose, avance avec le temps)
-        f"drawbox=x=20:y='ih*0.948':w='(iw-40)*t/{duration}':h=4:color=0xFF1493:t=fill",
+        f"drawbox=x=20:y='ih*0.92':w='(iw-40)*t/{duration}':h=4:color=0xFF1493:t=fill",
 
         # Brand label (centré, blanc opaque pour visibilite) — proportionnel, calibre 1920p
         f"drawtext=text='{brand}':x=(w-text_w)/2:y='h*0.956':fontsize={brand_size}:fontfile='{font}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1",
