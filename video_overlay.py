@@ -103,20 +103,20 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         # Corner brackets - top right
         f"drawbox=x='iw-95':y=100:w=70:h=4:color=white@0.9:t=fill",
         f"drawbox=x='iw-29':y=100:w=4:h=70:color=white@0.9:t=fill",
-        # Corner brackets - bottom left
-        f"drawbox=x=25:y='ih-130':w=70:h=4:color=white@0.9:t=fill",
-        f"drawbox=x=25:y='ih-200':w=4:h=70:color=white@0.9:t=fill",
+        # Corner brackets - bottom left (positions proportionnelles, calibrees a 1920p Android)
+        f"drawbox=x=25:y='ih*0.932':w=70:h=4:color=white@0.9:t=fill",
+        f"drawbox=x=25:y='ih*0.896':w=4:h=70:color=white@0.9:t=fill",
         # Corner brackets - bottom right
-        f"drawbox=x='iw-95':y='ih-130':w=70:h=4:color=white@0.9:t=fill",
-        f"drawbox=x='iw-29':y='ih-200':w=4:h=70:color=white@0.9:t=fill",
+        f"drawbox=x='iw-95':y='ih*0.932':w=70:h=4:color=white@0.9:t=fill",
+        f"drawbox=x='iw-29':y='ih*0.896':w=4:h=70:color=white@0.9:t=fill",
 
-        # Progress bar background
-        f"drawbox=x=20:y='ih-100':w='iw-40':h=4:color=white@0.2:t=fill",
+        # Progress bar background (proportionnel, calibre 1920p)
+        f"drawbox=x=20:y='ih*0.948':w='iw-40':h=4:color=white@0.2:t=fill",
         # Progress bar fill (rose, avance avec le temps)
-        f"drawbox=x=20:y='ih-100':w='(iw-40)*t/{duration}':h=4:color=0xFF1493:t=fill",
+        f"drawbox=x=20:y='ih*0.948':w='(iw-40)*t/{duration}':h=4:color=0xFF1493:t=fill",
 
-        # Brand label (centré, plus grand)
-        f"drawtext=text='{brand}':x=(w-text_w)/2:y=h-85:fontsize={brand_size}:fontfile='{font}':fontcolor=white@0.7:shadowcolor=black@0.4:shadowx=1:shadowy=1",
+        # Brand label (centré, plus grand) — proportionnel, calibre 1920p
+        f"drawtext=text='{brand}':x=(w-text_w)/2:y='h*0.956':fontsize={brand_size}:fontfile='{font}':fontcolor=white@0.7:shadowcolor=black@0.4:shadowx=1:shadowy=1",
     ]
 
     return ",".join(filters)
