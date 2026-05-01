@@ -79,11 +79,14 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
     brand_size = max(round(video_width * 22 / ref_w), 12)
 
     # Positions et tailles REC dot proportionnelles a la largeur (calibre 1080p)
+    timer_y = round(video_width * 16 / ref_w)  # Position Y du timer (16 sur 1080p)
     rec_dot_x = round(video_width * 24 / ref_w)
-    rec_dot_y = round(video_width * 20 / ref_w)
     rec_dot_size = max(round(video_width * 20 / ref_w), 10)
     rec_text_x = round(video_width * 50 / ref_w)
-    rec_text_y = round(video_width * 16 / ref_w)
+    # Aligne le bas du texte REC avec le bas du timer (timer plus grand)
+    rec_text_y = timer_y + timer_size - rec_size
+    # Centre verticalement le carre rouge sur le texte REC
+    rec_dot_y = rec_text_y + (rec_size - rec_dot_size) // 2
 
     full_event = event_name if event_name else ""
 
@@ -99,7 +102,7 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         # REC text (blanc, clignotant) - valeurs en pixels calculees en Python
         f"drawtext=text='REC':x={rec_text_x}:y={rec_text_y}:fontsize={rec_size}:fontfile='{font}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1:enable='lt(mod(t\\,1)\\,0.5)'",
         # Timer top right (aligne dynamiquement a w-text_w avec marge 20)
-        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x='w-text_w-20':y=16:fontsize={timer_size}:fontfile='{font_light}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1",
+        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x='w-text_w-20':y={timer_y}:fontsize={timer_size}:fontfile='{font_light}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1",
 
         # Event name (rose sur fond blanc semi-transparent pour visibilite sur tout fond)
         f"drawtext=text='{full_event}':x=(w-text_w)/2:y=62:fontsize={event_size}:fontfile='{font}':fontcolor=0xFF1493:box=1:boxcolor=white@0.85:boxborderw=8",
