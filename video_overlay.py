@@ -97,18 +97,19 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         # Event name (rose, gras, net)
         f"drawtext=text='{full_event}':x=(w-text_w)/2:y=62:fontsize={event_size}:fontfile='{font}':fontcolor=0xFF1493:shadowcolor=black@0.4:shadowx=1:shadowy=1",
 
+        # Corner brackets - dimensions proportionnelles a la hauteur (calibre 70px sur 1920p Android)
         # Corner brackets - top left
         f"drawbox=x=25:y=100:w=70:h=4:color=white@0.9:t=fill",
-        f"drawbox=x=25:y=100:w=4:h=70:color=white@0.9:t=fill",
+        f"drawbox=x=25:y=100:w=4:h='ih*0.0365':color=white@0.9:t=fill",
         # Corner brackets - top right
         f"drawbox=x='iw-95':y=100:w=70:h=4:color=white@0.9:t=fill",
-        f"drawbox=x='iw-29':y=100:w=4:h=70:color=white@0.9:t=fill",
-        # Corner brackets - bottom left (positions proportionnelles, calibrees a 1920p Android)
+        f"drawbox=x='iw-29':y=100:w=4:h='ih*0.0365':color=white@0.9:t=fill",
+        # Corner brackets - bottom left
         f"drawbox=x=25:y='ih*0.932':w=70:h=4:color=white@0.9:t=fill",
-        f"drawbox=x=25:y='ih*0.896':w=4:h=70:color=white@0.9:t=fill",
+        f"drawbox=x=25:y='ih*0.896':w=4:h='ih*0.0365':color=white@0.9:t=fill",
         # Corner brackets - bottom right
         f"drawbox=x='iw-95':y='ih*0.932':w=70:h=4:color=white@0.9:t=fill",
-        f"drawbox=x='iw-29':y='ih*0.896':w=4:h=70:color=white@0.9:t=fill",
+        f"drawbox=x='iw-29':y='ih*0.896':w=4:h='ih*0.0365':color=white@0.9:t=fill",
 
         # Progress bar background (proportionnel, calibre 1920p)
         f"drawbox=x=20:y='ih*0.948':w='iw-40':h=4:color=white@0.2:t=fill",
