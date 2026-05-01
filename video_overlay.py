@@ -63,8 +63,20 @@ def build_color_filter(matrix, tmpdir=None):
     return f"lut3d='{lut_path}'"
 
 
-def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand: str = "SHOOTNBOX"):
-    """Construit le filtre ffmpeg pour l'overlay Cinema."""
+def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand: str = "SHOOTNBOX", video_width: int = 1080):
+    """Construit le filtre ffmpeg pour l'overlay Cinema.
+
+    fontsizes proportionnels a la largeur de la video source, calibres pour
+    donner les valeurs historiques sur Android 1080x1920 (zero changement),
+    et reduits sur iPhone 720x1280 (template moins envahissant).
+    """
+
+    # Calibration sur largeur de reference 1080 (Android standard)
+    ref_w = 1080
+    rec_size = max(round(video_width * 28 / ref_w), 14)
+    timer_size = max(round(video_width * 36 / ref_w), 18)
+    event_size = max(round(video_width * 30 / ref_w), 14)
+    brand_size = max(round(video_width * 22 / ref_w), 12)
 
     full_event = event_name if event_name else ""
 
@@ -78,12 +90,12 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         # REC dot (rouge, clignotant)
         "drawbox=x=24:y=20:w=20:h=20:color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
         # REC text (blanc, clignotant)
-        f"drawtext=text='REC':x=50:y=16:fontsize=28:fontfile='{font}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1:enable='lt(mod(t\\,1)\\,0.5)'",
+        f"drawtext=text='REC':x=50:y=16:fontsize={rec_size}:fontfile='{font}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1:enable='lt(mod(t\\,1)\\,0.5)'",
         # Timer top right
-        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-170:y=16:fontsize=36:fontfile='{font_light}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1",
+        f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x=w-170:y=16:fontsize={timer_size}:fontfile='{font_light}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1",
 
         # Event name (rose, gras, net)
-        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=62:fontsize=30:fontfile='{font}':fontcolor=0xFF1493:shadowcolor=black@0.4:shadowx=1:shadowy=1",
+        f"drawtext=text='{full_event}':x=(w-text_w)/2:y=62:fontsize={event_size}:fontfile='{font}':fontcolor=0xFF1493:shadowcolor=black@0.4:shadowx=1:shadowy=1",
 
         # Corner brackets - top left
         f"drawbox=x=25:y=100:w=70:h=4:color=white@0.9:t=fill",
@@ -104,7 +116,7 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
         f"drawbox=x=20:y='ih-100':w='(iw-40)*t/{duration}':h=4:color=0xFF1493:t=fill",
 
         # Brand label (centré, plus grand)
-        f"drawtext=text='{brand}':x=(w-text_w)/2:y=h-85:fontsize=22:fontfile='{font}':fontcolor=white@0.7:shadowcolor=black@0.4:shadowx=1:shadowy=1",
+        f"drawtext=text='{brand}':x=(w-text_w)/2:y=h-85:fontsize={brand_size}:fontfile='{font}':fontcolor=white@0.7:shadowcolor=black@0.4:shadowx=1:shadowy=1",
     ]
 
     return ",".join(filters)
@@ -120,6 +132,19 @@ def get_video_duration(filepath: str) -> float:
         return float(result.stdout.strip())
     except:
         return 30.0
+
+
+def get_video_width(filepath: str) -> int:
+    """Recupere la largeur de la video source en pixels (pour proportionner les fontsizes)."""
+    result = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-select_streams", "v:0",
+         "-show_entries", "stream=width", "-of", "csv=p=0", filepath],
+        capture_output=True, text=True
+    )
+    try:
+        return int(result.stdout.strip())
+    except:
+        return 1080
 
 
 def upload_to_s3(filepath: str, s3_key: str, content_type: str = "video/mp4") -> str:
@@ -172,11 +197,12 @@ def process_video():
             with open(input_path, "wb") as f:
                 f.write(resp.content)
 
-            # Duree
+            # Duree + resolution source (pour proportionner fontsizes overlay)
             duration = get_video_duration(input_path)
+            video_width = get_video_width(input_path)
 
             # Construire le filtre
-            vf = build_ffmpeg_filter(event_name, event_type, duration, brand)
+            vf = build_ffmpeg_filter(event_name, event_type, duration, brand, video_width)
 
             # Ajouter le filtre couleur si present
             color_vf = build_color_filter(color_matrix, tmpdir)
