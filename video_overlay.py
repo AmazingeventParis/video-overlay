@@ -87,10 +87,10 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
     font_light = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
     filters = [
-        # REC dot (rouge, clignotant)
-        "drawbox=x=24:y=20:w=20:h=20:color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
-        # REC text (blanc, clignotant)
-        f"drawtext=text='REC':x=50:y=16:fontsize={rec_size}:fontfile='{font}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1:enable='lt(mod(t\\,1)\\,0.5)'",
+        # REC dot (rouge, clignotant) - taille et position proportionnelles a la largeur (calibre 1080p)
+        f"drawbox=x='iw*0.0222':y='iw*0.0185':w='iw*0.0185':h='iw*0.0185':color=red:t=fill:enable='lt(mod(t\\,1)\\,0.5)'",
+        # REC text (blanc, clignotant) - position proportionnelle aussi
+        f"drawtext=text='REC':x='iw*0.0463':y='iw*0.0148':fontsize={rec_size}:fontfile='{font}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1:enable='lt(mod(t\\,1)\\,0.5)'",
         # Timer top right (aligne dynamiquement a w-text_w avec marge 20)
         f"drawtext=text='%{{pts\\:gmtime\\:0\\:%M\\\\\\:%S}}':x='w-text_w-20':y=16:fontsize={timer_size}:fontfile='{font_light}':fontcolor=white:shadowcolor=black@0.5:shadowx=1:shadowy=1",
 
