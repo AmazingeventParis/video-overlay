@@ -221,10 +221,15 @@ def process_video():
             cmd = [
                 "ffmpeg", "-y", "-i", input_path,
                 "-vf", full_vf,
+                "-c:v", "libx264",
+                "-profile:v", "main",
+                "-level", "4.0",
                 "-pix_fmt", "yuv420p",
-                "-c:a", "copy",
+                "-c:a", "aac",
+                "-b:a", "128k",
                 "-preset", "medium",
-                "-crf", "14",
+                "-crf", "20",
+                "-movflags", "+faststart",
                 output_path
             ]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
