@@ -314,6 +314,82 @@ def generate_thumbnail():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/remux_all", methods=["POST"])
+def remux_all():
+    """Re-encapsule toutes les videos .mp4 du bucket S3 avec +faststart.
+
+    Permet de fixer la lecture sur Huawei P30 (et autres lecteurs stricts) pour
+    les videos deja uploadees avant le fix codec/moov atom. Pas de re-encodage,
+    juste un remux (rapide, ~quelques secondes par video).
+
+    POST /remux_all
+    Body JSON: { "api_key": "snb_remux_2026", "limit": 100 (optional) }
+    """
+    data = request.json or {}
+    api_key = data.get("api_key", "")
+    if api_key != "snb_remux_2026":
+        return jsonify({"error": "unauthorized"}), 401
+
+    limit = data.get("limit")
+    prefix = data.get("prefix", "")
+
+    paginator = s3_client.get_paginator("list_objects_v2")
+    pages = paginator.paginate(Bucket=S3_BUCKET, Prefix=prefix)
+
+    processed = []
+    failed = []
+    skipped = 0
+
+    for page in pages:
+        for obj in page.get("Contents", []):
+            key = obj["Key"]
+            if not key.lower().endswith(".mp4"):
+                continue
+
+            if limit and len(processed) + len(failed) >= limit:
+                break
+
+            try:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    input_path = os.path.join(tmpdir, "input.mp4")
+                    output_path = os.path.join(tmpdir, "output.mp4")
+
+                    s3_client.download_file(S3_BUCKET, key, input_path)
+
+                    # Remux sans re-encodage : juste deplace le moov atom au debut
+                    cmd = [
+                        "ffmpeg", "-y", "-i", input_path,
+                        "-c", "copy",
+                        "-movflags", "+faststart",
+                        output_path,
+                    ]
+                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+
+                    if result.returncode != 0 or not os.path.exists(output_path):
+                        failed.append({"key": key, "error": result.stderr[-200:]})
+                        continue
+
+                    s3_client.upload_file(
+                        output_path, S3_BUCKET, key,
+                        ExtraArgs={"ContentType": "video/mp4", "ACL": "public-read"},
+                    )
+                    processed.append(key)
+            except Exception as e:
+                failed.append({"key": key, "error": str(e)})
+
+        if limit and len(processed) + len(failed) >= limit:
+            break
+
+    return jsonify({
+        "success": True,
+        "processed_count": len(processed),
+        "failed_count": len(failed),
+        "skipped": skipped,
+        "processed_sample": processed[:20],
+        "failed_sample": failed[:20],
+    })
+
+
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"})
