@@ -66,23 +66,22 @@ def build_color_filter(matrix, tmpdir=None):
 def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand: str = "SHOOTNBOX", video_width: int = 1080):
     """Construit le filtre ffmpeg pour l'overlay Cinema.
 
-    fontsizes proportionnels a la largeur de la video source, calibres pour
-    donner les valeurs historiques sur Android 1080x1920 (zero changement),
-    et reduits sur iPhone 720x1280 (template moins envahissant).
+    Tailles FIXES en pixels (plus de scaling proportionnel a la resolution video).
+    Raison : video_compress reduit a 640px, donc les fontsizes scales devenaient ~60%
+    plus petits qu'attendu, l'overlay paraissait microscopique apres upscale a l'ecran.
+    Avec des tailles fixes, l'overlay garde une taille PERCUE coherente sur l'ecran
+    final, peu importe la resolution video source.
     """
 
-    # Calibration sur largeur de reference 1080 (Android standard)
-    ref_w = 1080
-    rec_size = max(round(video_width * 28 / ref_w), 14)
-    timer_size = max(round(video_width * 36 / ref_w), 18)
-    event_size = max(round(video_width * 30 / ref_w), 14)
-    brand_size = max(round(video_width * 22 / ref_w), 12)
+    rec_size = 28
+    timer_size = 36
+    event_size = 30
+    brand_size = 22
 
-    # Positions et tailles REC dot proportionnelles a la largeur (calibre 1080p)
-    timer_y = round(video_width * 16 / ref_w)  # Position Y du timer (16 sur 1080p)
-    rec_dot_x = round(video_width * 24 / ref_w)
-    rec_dot_size = max(round(video_width * 20 / ref_w), 10)
-    rec_text_x = round(video_width * 50 / ref_w)
+    timer_y = 16
+    rec_dot_x = 24
+    rec_dot_size = 20
+    rec_text_x = 50
     # Aligne le bas du texte REC avec le bas du timer (timer plus grand)
     rec_text_y = timer_y + timer_size - rec_size
     # Centre verticalement le carre rouge sur le texte REC
