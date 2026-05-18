@@ -90,8 +90,12 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
 
     full_event = event_name if event_name else ""
 
-    # Echapper les caractères spéciaux pour ffmpeg drawtext
-    full_event = full_event.replace("'", "\\'").replace(":", "\\:")
+    # Echapper les caracteres speciaux pour ffmpeg drawtext.
+    # IMPORTANT : ffmpeg ne supporte pas \' a l'interieur d'une chaine single-quoted.
+    # Il faut fermer la chaine, mettre une apostrophe litterale, puis rouvrir : '\''.
+    # Sinon ffmpeg termine la chaine au premier ' et reparse la suite comme options
+    # (ex: "L'evenement de Tal Cohen" provoquait "Error applying option 'w' to filter 'drawtext'").
+    full_event = full_event.replace("'", "'\\''").replace(":", "\\:")
 
     font = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
     font_light = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
