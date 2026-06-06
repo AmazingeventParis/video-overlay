@@ -148,14 +148,21 @@ def get_video_duration(filepath: str) -> float:
 
 
 def get_video_width(filepath: str) -> int:
-    """Recupere la largeur de la video source en pixels (pour proportionner les fontsizes)."""
+    """Largeur d'AFFICHAGE de la video (cote court pour une video portrait).
+
+    Important : l'iPhone stocke souvent la video en paysage (ex 1920x1080) avec une
+    metadonnee de rotation qui l'affiche en portrait (1080x1920). ffprobe 'stream=width'
+    renvoie alors 1920 (cote long) au lieu de 1080 -> les fontsizes deviennent ~1.8x
+    trop gros. On prend donc min(width, height) = le cote court = la vraie largeur
+    d'affichage portrait (1080 sur Android comme iPhone). Ne change rien pour Android."""
     result = subprocess.run(
         ["ffprobe", "-v", "quiet", "-select_streams", "v:0",
-         "-show_entries", "stream=width", "-of", "csv=p=0", filepath],
+         "-show_entries", "stream=width,height", "-of", "csv=p=0", filepath],
         capture_output=True, text=True
     )
     try:
-        return int(result.stdout.strip())
+        parts = [int(x) for x in result.stdout.strip().split(",") if x.strip().isdigit()]
+        return min(parts) if len(parts) >= 2 else (parts[0] if parts else 1080)
     except:
         return 1080
 
