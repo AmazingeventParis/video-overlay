@@ -73,10 +73,15 @@ def build_ffmpeg_filter(event_name: str, event_type: str, duration: float, brand
     final, peu importe la resolution video source.
     """
 
-    rec_size = 28
-    timer_size = 36
-    event_size = 30
-    brand_size = 22
+    # Tailles PROPORTIONNELLES a la largeur d'affichage (min(w,h) via get_video_width).
+    # Raison : video_compress reduit souvent a ~640px -> des tailles FIXES paraissent
+    # enormes une fois la video reaffichee plein ecran (perçu ~51px au lieu de ~30px).
+    # Le proportionnel garde une taille PERCUE coherente quelle que soit la resolution.
+    ref_w = 1080
+    rec_size = max(round(video_width * 28 / ref_w), 13)
+    timer_size = max(round(video_width * 36 / ref_w), 16)
+    event_size = max(round(video_width * 30 / ref_w), 14)
+    brand_size = max(round(video_width * 22 / ref_w), 11)
 
     timer_y = 16
     rec_dot_x = 24
