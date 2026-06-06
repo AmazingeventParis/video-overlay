@@ -172,6 +172,24 @@ def get_video_width(filepath: str) -> int:
         return 1080
 
 
+def is_iphone_portrait(filepath: str) -> bool:
+    """True si la video est stockee en PAYSAGE (largeur codee > hauteur codee).
+
+    C'est la signature d'une video iPhone portrait (stockee 1920x1080 + rotation).
+    Android stocke le portrait nativement (1080x1920, largeur < hauteur).
+    Utilise pour DESACTIVER l'overlay Cinema sur iPhone (rendu KO pour l'instant)."""
+    result = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-select_streams", "v:0",
+         "-show_entries", "stream=width,height", "-of", "csv=p=0", filepath],
+        capture_output=True, text=True
+    )
+    try:
+        parts = [int(x) for x in result.stdout.strip().split(",") if x.strip().isdigit()]
+        return len(parts) >= 2 and parts[0] > parts[1]
+    except:
+        return False
+
+
 def upload_to_s3(filepath: str, s3_key: str, content_type: str = "video/mp4") -> str:
     """Upload un fichier vers OVH S3 et retourne l'URL publique."""
     s3_client.upload_file(
@@ -226,12 +244,22 @@ def process_video():
             duration = get_video_duration(input_path)
             video_width = get_video_width(input_path)
 
-            # Construire le filtre
-            vf = build_ffmpeg_filter(event_name, event_type, duration, brand, video_width)
+            # ⚠️ TEMPLATE DESACTIVE SUR IPHONE (rendu KO + crash app cote iPhone).
+            # On detecte l'iPhone (video stockee en paysage + rotation) et on SAUTE
+            # l'overlay Cinema. Le filtre couleur eventuel reste applique. A reactiver
+            # plus tard quand le rendu/crash iPhone sera regle.
+            skip_overlay = is_iphone_portrait(input_path)
+            vf = "" if skip_overlay else build_ffmpeg_filter(event_name, event_type, duration, brand, video_width)
 
             # Ajouter le filtre couleur si present
             color_vf = build_color_filter(color_matrix, tmpdir)
-            full_vf = f"{color_vf},{vf}" if color_vf else vf
+            parts_vf = [p for p in [color_vf, vf] if p]
+            full_vf = ",".join(parts_vf)
+
+            # Rien a appliquer (iPhone sans filtre couleur) -> on garde la video brute
+            if not full_vf:
+                return jsonify({"success": True, "url": video_url, "skipped": "iphone_no_overlay"})
+
             cmd = [
                 "ffmpeg", "-y", "-i", input_path,
                 "-vf", full_vf,
